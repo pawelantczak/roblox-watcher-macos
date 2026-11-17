@@ -270,6 +270,10 @@
 
         <div class="space-y-1.5 border-t border-slate-800 pt-2.5">
           <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="cfgAntiAfk" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
+            <span class="text-slate-300">Anti-AFK background keep-alive (clicks center every 5 min)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="cfgAutoTeleport" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
             <span class="text-slate-300">Auto Teleport to Event Area after reconnect</span>
           </label>
@@ -501,6 +505,7 @@
       document.getElementById('cfgButtonText').value = cfg.reconnectButtonText ?? 'Reconnect';
       document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['pumpkin', 'tycoon']).join(', ');
       document.getElementById('cfgDisconnectKeywords').value = (cfg.disconnectKeywords ?? []).join('\n');
+      document.getElementById('cfgAntiAfk').checked = cfg.antiAfkEnabled ?? true;
       document.getElementById('cfgAutoTeleport').checked = cfg.autoTeleportToEvent ?? true;
       document.getElementById('cfgAutoClick').checked = cfg.autoClickReconnect ?? true;
       document.getElementById('cfgAutoRelaunch').checked = cfg.autoRelaunchOnKick ?? true;
@@ -518,7 +523,9 @@
         disconnectKeywords: document.getElementById('cfgDisconnectKeywords').value.split('\n').map(s => s.trim()).filter(Boolean),
         autoTeleportToEvent: document.getElementById('cfgAutoTeleport').checked,
         autoClickReconnect: document.getElementById('cfgAutoClick').checked,
-        autoRelaunchOnKick: document.getElementById('cfgAutoRelaunch').checked
+        autoRelaunchOnKick: document.getElementById('cfgAutoRelaunch').checked,
+        antiAfkEnabled: document.getElementById('cfgAntiAfk').checked,
+        antiAfkIntervalSeconds: 300.0
       };
 
       sendNative({ action: 'saveConfig', config: updated });

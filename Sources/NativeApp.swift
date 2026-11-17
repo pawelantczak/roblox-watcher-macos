@@ -56,6 +56,8 @@ struct Config: Codable {
     var autoClickReconnect: Bool = true
     var autoRelaunchOnKick: Bool = true
     var autoTeleportToEvent: Bool = true
+    var antiAfkEnabled: Bool = true
+    var antiAfkIntervalSeconds: Double = 300.0 // 5 minutes
     var reconnectButtonText: String = "Reconnect"
     var disconnectKeywords: [String] = [
         "disconnected",
@@ -76,6 +78,36 @@ struct Config: Codable {
         "pumpkin",
         "tycoon"
     ]
+    
+    enum CodingKeys: String, CodingKey {
+        case checkIntervalSeconds, reconnectCooldownSeconds, placeId, vipServerUrl
+        case autoClickReconnect, autoRelaunchOnKick, autoTeleportToEvent
+        case antiAfkEnabled, antiAfkIntervalSeconds
+        case reconnectButtonText, disconnectKeywords, eventTargetKeywords
+    }
+    
+    init() {}
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        checkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .checkIntervalSeconds) ?? 5.0
+        reconnectCooldownSeconds = try container.decodeIfPresent(Double.self, forKey: .reconnectCooldownSeconds) ?? 30.0
+        placeId = try container.decodeIfPresent(String.self, forKey: .placeId)
+        vipServerUrl = try container.decodeIfPresent(String.self, forKey: .vipServerUrl)
+        autoClickReconnect = try container.decodeIfPresent(Bool.self, forKey: .autoClickReconnect) ?? true
+        autoRelaunchOnKick = try container.decodeIfPresent(Bool.self, forKey: .autoRelaunchOnKick) ?? true
+        autoTeleportToEvent = try container.decodeIfPresent(Bool.self, forKey: .autoTeleportToEvent) ?? true
+        antiAfkEnabled = try container.decodeIfPresent(Bool.self, forKey: .antiAfkEnabled) ?? true
+        antiAfkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .antiAfkIntervalSeconds) ?? 300.0
+        reconnectButtonText = try container.decodeIfPresent(String.self, forKey: .reconnectButtonText) ?? "Reconnect"
+        disconnectKeywords = try container.decodeIfPresent([String].self, forKey: .disconnectKeywords) ?? [
+            "disconnected", "lost connection", "error code: 277", "error code: 279",
+            "error code: 267", "error code: 271", "error code: 268", "error code: 273",
+            "server was shut down", "server has closed", "please reconnect",
+            "connection lost", "connection closed"
+        ]
+        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["pumpkin", "tycoon"]
+    }
 }
 
 struct Stats: Codable {
@@ -182,6 +214,7 @@ func activateRoblox() {
 struct RobloxWindowInfo {
     let windowId: CGWindowID
     let bounds: CGRect
+    let ownerPID: pid_t
 }
 
 func findRobloxWindow() -> RobloxWindowInfo? {
@@ -193,10 +226,11 @@ func findRobloxWindow() -> RobloxWindowInfo? {
         let layer = win[kCGWindowLayer as String] as? Int ?? 0
         if owner == "Roblox" && layer == 0 {
             let id = win[kCGWindowNumber as String] as? Int ?? 0
+            let pid = win[kCGWindowOwnerPID as String] as? pid_t ?? 0
             if let boundsDict = win[kCGWindowBounds as String] as? [String: Any],
                let rect = CGRect(dictionaryRepresentation: boundsDict as CFDictionary) {
                 if rect.width > 200 && rect.height > 200 {
-                    return RobloxWindowInfo(windowId: CGWindowID(id), bounds: rect)
+                    return RobloxWindowInfo(windowId: CGWindowID(id), bounds: rect, ownerPID: pid)
                 }
             }
         }
@@ -292,6 +326,20 @@ func clickScreenAtPoint(point: CGPoint, label: String = "Target", logger: (Strin
     }
     
     logger("\(logTimestamp()) [Success] Two-click sequence dispatched to \(label) (1st activate, 2nd action).")
+}
+
+func clickRobloxCenterInBackground(bounds: CGRect, pid: pid_t, logger: ((String) -> Void)? = nil) {
+    let center = CGPoint(x: bounds.midX, y: bounds.midY)
+    guard let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: center, mouseButton: .left),
+          let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: center, mouseButton: .left) else {
+        return
+    }
+    
+    // Delivers directly to Roblox process port; does NOT move mouse cursor, does NOT steal focus
+    down.postToPid(pid)
+    usleep(50_000) // 50ms hold
+    up.postToPid(pid)
+    logger?("\(logTimestamp()) [Anti-AFK] Dispatched background keep-alive click to Roblox (PID \(pid)) at center (\(Int(center.x)), \(Int(center.y)))")
 }
 
 func killAndRelaunchGame(placeId: String?, vipUrl: String?, logger: (String) -> Void) {
@@ -498,6 +546,7 @@ class WatcherManager {
     private func runLoop() {
         let screenshotPath = getScreenshotFileURL().path
         var lastActionTimestamp = Date.distantPast
+        var lastAntiAfkClickTimestamp = Date()
         
         appendLog("\(logTimestamp()) [Config] Check Interval: \(config.checkIntervalSeconds)s | Target: \(config.reconnectButtonText)")
         appendLog("\(logTimestamp()) [Status] Watcher is actively monitoring screen.\n")
@@ -620,6 +669,19 @@ class WatcherManager {
                                 appendLog("\(logTimestamp()) [Check] Game healthy. Screen samples: [\(sample.joined(separator: ", "))]")
                             } else {
                                 appendLog("\(logTimestamp()) [Check] Game healthy. No disconnect dialog present.")
+                            }
+                            
+                            // Anti-AFK Keep-Alive Click (every 5 minutes in background)
+                            if config.antiAfkEnabled && now.timeIntervalSince(lastAntiAfkClickTimestamp) >= config.antiAfkIntervalSeconds {
+                                lastAntiAfkClickTimestamp = now
+                                let liveWin = findRobloxWindow()
+                                let currentBounds = liveWin?.bounds ?? winBounds
+                                let targetPid = liveWin?.ownerPID ?? (findRobloxProcess()?.pid ?? 0)
+                                if targetPid > 0 {
+                                    clickRobloxCenterInBackground(bounds: currentBounds, pid: targetPid) { msg in
+                                        self.appendLog(msg)
+                                    }
+                                }
                             }
                         }
                     } else {
@@ -904,6 +966,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             "logs": mgr.getRecentLogs(),
             "screenshotBase64": base64Img as Any,
             "autoTeleportToEvent": mgr.config.autoTeleportToEvent,
+            "antiAfkEnabled": mgr.config.antiAfkEnabled,
             "eventKeywords": mgr.config.eventTargetKeywords,
             "eventIconBase64": mgr.latestEventCropBase64 as Any,
             "eventCoords": liveCoords as Any,
