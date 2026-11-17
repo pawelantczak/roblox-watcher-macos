@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.2] - 2026-11-17
 
 ### Fixed
+- **Anti-AFK Focus Synchronization**: Replaced fixed 60ms delay with active focus confirmation (`robloxApp.isActive`) and a two-click sequence (1st click confirms active AppKit window, 2nd click registers in `UserInputService` with 100ms frame dwell), preventing window activation from eating the keep-alive input.
 - **Self-Signed Identity Detection**: Removed the `-v` filter in `build.sh` so `security find-identity` detects self-signed development certificates (`RobloxWatcherDev`), enabling persistent code signing and preserving macOS permissions across rebuilds.
 
 ---
