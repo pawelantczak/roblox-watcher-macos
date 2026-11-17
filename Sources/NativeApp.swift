@@ -734,6 +734,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updateTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             self?.syncUIState()
         }
+        
+        if ProcessInfo.processInfo.arguments.contains("--start") {
+            WatcherManager.shared.start()
+        }
     }
     
     func setupStatusBar() {
