@@ -4,6 +4,10 @@ A high-performance native macOS utility designed to monitor Roblox, detect disco
 
 Available as both a **Native macOS App with Menu Bar controls** and a lightweight **Headless CLI**.
 
+<p align="center">
+  <img src="Resources/screenshot.png" alt="Roblox Watcher macOS Dashboard" width="800" />
+</p>
+
 ---
 
 ## Features
