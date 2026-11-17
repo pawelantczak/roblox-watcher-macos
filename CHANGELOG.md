@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Event Bar Visibility**: Hide the entire Event Teleport debug bar and "Test Click" action when "Teleport to Event" is disabled in settings, relocating the "Refresh" action directly to the Roblox Window Capture card header so it remains accessible.
+
+---
+
 ## [1.1.3] - 2026-11-17
 
 ### Fixed
