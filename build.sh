@@ -9,21 +9,37 @@ if [ -f "$DIR/VERSION" ]; then
     VERSION=$(cat "$DIR/VERSION" | tr -d '[:space:]')
 fi
 
+# Stamp version into Resources/Info.plist
+plutil -replace CFBundleShortVersionString -string "$VERSION" "$DIR/Resources/Info.plist"
+plutil -replace CFBundleVersion -string "$VERSION" "$DIR/Resources/Info.plist"
+
 echo "=========================================="
 echo "    Building Roblox Watcher Suite v$VERSION"
 echo "=========================================="
 
-# 1. Build CLI Tool
-echo "==> [1/3] Compiling CLI binary (roblox-watcher)..."
-swiftc -O \
+# 1. Build CLI Tool (Universal Binary: arm64 + x86_64)
+echo "==> [1/3] Compiling CLI binary (Universal)..."
+swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
     Sources/main.swift \
-    -o "$DIR/roblox-watcher"
+    -o "$DIR/roblox-watcher_arm64"
 
-# 2. Build Native macOS App Bundle
-echo "==> [2/3] Assembling Roblox Watcher.app (v$VERSION)..."
+swiftc -O -target x86_64-apple-macos14.0 \
+    -framework Vision \
+    -framework AppKit \
+    -framework CoreGraphics \
+    Sources/main.swift \
+    -o "$DIR/roblox-watcher_x86_64"
+
+lipo -create -output "$DIR/roblox-watcher" "$DIR/roblox-watcher_arm64" "$DIR/roblox-watcher_x86_64"
+rm -f "$DIR/roblox-watcher_arm64" "$DIR/roblox-watcher_x86_64"
+chmod +x "$DIR/roblox-watcher"
+codesign --force --sign - "$DIR/roblox-watcher" 2>/dev/null || true
+
+# 2. Build Native macOS App Bundle (Universal Binary: arm64 + x86_64)
+echo "==> [2/3] Assembling Roblox Watcher.app (v$VERSION, Universal)..."
 APP_NAME="Roblox Watcher.app"
 CONTENTS_DIR="$DIR/$APP_NAME/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
@@ -44,15 +60,32 @@ cp "$DIR/Resources/menubar_active.png" "$RESOURCES_DIR/menubar_active.png"
 cp "$DIR/Resources/menubar_inactive.png" "$RESOURCES_DIR/menubar_inactive.png"
 cp "$DIR/Resources/index.html" "$RESOURCES_DIR/index.html"
 
-# Compile NativeApp executable
-swiftc -O \
+# Compile NativeApp executable (Universal: arm64 + x86_64)
+swiftc -O -target arm64-apple-macos14.0 \
     -framework AppKit \
     -framework WebKit \
     -framework Vision \
     -framework CoreGraphics \
     -framework ImageIO \
     Sources/NativeApp.swift \
-    -o "$MACOS_DIR/RobloxWatcher"
+    -o "$MACOS_DIR/RobloxWatcher_arm64"
+
+swiftc -O -target x86_64-apple-macos14.0 \
+    -framework AppKit \
+    -framework WebKit \
+    -framework Vision \
+    -framework CoreGraphics \
+    -framework ImageIO \
+    Sources/NativeApp.swift \
+    -o "$MACOS_DIR/RobloxWatcher_x86_64"
+
+lipo -create -output "$MACOS_DIR/RobloxWatcher" "$MACOS_DIR/RobloxWatcher_arm64" "$MACOS_DIR/RobloxWatcher_x86_64"
+rm -f "$MACOS_DIR/RobloxWatcher_arm64" "$MACOS_DIR/RobloxWatcher_x86_64"
+chmod +x "$MACOS_DIR/RobloxWatcher"
+
+# Ad-hoc code sign bundle for Gatekeeper compatibility
+echo "==> Signing app bundle..."
+codesign --force --deep --sign - "$DIR/$APP_NAME"
 
 # 3. Create DMG Installer
 DMG_NAME="Roblox-Watcher-v${VERSION}.dmg"
@@ -79,7 +112,7 @@ rm -rf "$DIR/.build"
 
 echo "=========================================="
 echo " Build Success!"
-echo " - Version:    $VERSION"
+echo " - Version:    $VERSION (Universal: arm64 + x86_64)"
 echo " - CLI Tool:   $DIR/roblox-watcher"
 echo " - macOS App:  $DIR/$APP_NAME"
 echo " - DMG Image:  $DIR/$DMG_NAME"
