@@ -14,7 +14,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
   - `Sources/NativeApp.swift`: Native Cocoa GUI application (`Roblox Watcher.app`) embedding a lightweight WebKit dashboard.
   - `Resources/index.html`: Responsive dark-mode dashboard UI communicating via native WebKit script message handlers.
   - `Resources/`: App icons (`app_icon.png`), crisp menu bar indicators (`menubar_active.png`, `menubar_inactive.png`), and `Info.plist`.
-  - `build.sh`: Builds Universal binaries (`arm64` + `x86_64`) targeting macOS 14.0+, applies ad-hoc codesigning (`codesign --force --deep --sign -`), and packages `Roblox-Watcher-v<version>.dmg`.
+  - `build.sh`: Builds Universal binaries (`arm64` + `x86_64`) targeting macOS 14.0+, automatically applies persistent local code signing (`RobloxWatcherDev`) or ad-hoc signing (`-`), and packages `Roblox-Watcher-v<version>.dmg`.
   - `bump.sh`: Automated semver bumper (`patch`, `minor`, `major`, or custom version) that updates `VERSION` and runs `build.sh`.
   - `.github/workflows/build.yml`: GitHub Actions pipeline configured for `runs-on: self-hosted`, generating CI artifacts and publishing GitHub releases when `v*` tags are pushed.
 

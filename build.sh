@@ -19,6 +19,13 @@ echo "=========================================="
 
 # 1. Build CLI Tool (Universal Binary: arm64 + x86_64)
 CLI_NAME="roblox-watcher-v${VERSION}"
+# Detect persistent code signing identity to preserve macOS permissions across rebuilds
+SIGN_IDENTITY="-"
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "RobloxWatcherDev"; then
+    SIGN_IDENTITY="RobloxWatcherDev"
+    echo "==> Found persistent code signing identity: $SIGN_IDENTITY"
+fi
+
 echo "==> [1/3] Compiling CLI binary ($CLI_NAME, Universal)..."
 swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
@@ -37,7 +44,7 @@ swiftc -O -target x86_64-apple-macos14.0 \
 lipo -create -output "$DIR/$CLI_NAME" "$DIR/${CLI_NAME}_arm64" "$DIR/${CLI_NAME}_x86_64"
 rm -f "$DIR/${CLI_NAME}_arm64" "$DIR/${CLI_NAME}_x86_64"
 chmod +x "$DIR/$CLI_NAME"
-codesign --force --sign - "$DIR/$CLI_NAME" 2>/dev/null || true
+codesign --force --sign "$SIGN_IDENTITY" "$DIR/$CLI_NAME" 2>/dev/null || true
 ln -sf "$DIR/$CLI_NAME" "$DIR/roblox-watcher"
 
 # 2. Build Native macOS App Bundle (Universal Binary: arm64 + x86_64)
@@ -85,9 +92,9 @@ lipo -create -output "$MACOS_DIR/RobloxWatcher" "$MACOS_DIR/RobloxWatcher_arm64"
 rm -f "$MACOS_DIR/RobloxWatcher_arm64" "$MACOS_DIR/RobloxWatcher_x86_64"
 chmod +x "$MACOS_DIR/RobloxWatcher"
 
-# Ad-hoc code sign bundle for Gatekeeper compatibility
-echo "==> Signing app bundle..."
-codesign --force --deep --sign - "$DIR/$APP_NAME"
+# Code sign bundle (uses persistent identity if found, falls back to ad-hoc)
+echo "==> Signing app bundle with identity: $SIGN_IDENTITY..."
+codesign --force --deep --sign "$SIGN_IDENTITY" "$DIR/$APP_NAME"
 
 # 3. Create DMG Installer
 DMG_NAME="Roblox-Watcher-v${VERSION}.dmg"
