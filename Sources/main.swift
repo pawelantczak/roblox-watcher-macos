@@ -431,8 +431,26 @@ func getAppVersion() -> String {
     return "1.0.0"
 }
 
+// MARK: - Single Instance Enforcement
+func enforceSingleCLIInstance() {
+    let lockPath = NSTemporaryDirectory() + "roblox_watcher_cli.lock"
+    let lockFd = open(lockPath, O_CREAT | O_RDWR, 0o666)
+    if lockFd >= 0 {
+        if flock(lockFd, LOCK_EX | LOCK_NB) != 0 {
+            print("[Error] Another instance of roblox-watcher CLI is already running. Exiting.")
+            exit(1)
+        }
+        ftruncate(lockFd, 0)
+        let pidString = "\(ProcessInfo.processInfo.processIdentifier)\n"
+        pidString.withCString { ptr in
+            _ = write(lockFd, ptr, strlen(ptr))
+        }
+    }
+}
+
 // MARK: - Main Loop
 func main() {
+    enforceSingleCLIInstance()
     let version = getAppVersion()
     print("==================================================")
     print("   ROBLOX DISCONNECT WATCHER & AUTO-REJOIN v\(version)")

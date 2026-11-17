@@ -1038,7 +1038,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 }
 
+// MARK: - Single Instance Enforcement
+func enforceSingleInstance() {
+    let lockPath = NSTemporaryDirectory() + "roblox_watcher_gui.lock"
+    let lockFd = open(lockPath, O_CREAT | O_RDWR, 0o666)
+    if lockFd >= 0 {
+        if flock(lockFd, LOCK_EX | LOCK_NB) != 0 {
+            let myPid = ProcessInfo.processInfo.processIdentifier
+            let otherApps = NSWorkspace.shared.runningApplications.filter {
+                $0.processIdentifier != myPid && (
+                    $0.bundleIdentifier == "xyz.ps99clan.robloxwatcher" ||
+                    $0.localizedName == "Roblox Watcher" ||
+                    $0.executableURL?.lastPathComponent == "RobloxWatcher"
+                )
+            }
+            if let existing = otherApps.first {
+                existing.activate()
+            }
+            exit(0)
+        }
+        
+        ftruncate(lockFd, 0)
+        let pidString = "\(ProcessInfo.processInfo.processIdentifier)\n"
+        pidString.withCString { ptr in
+            _ = write(lockFd, ptr, strlen(ptr))
+        }
+    }
+}
+
 // MARK: - App Entrypoint
+enforceSingleInstance()
 let app = NSApplication.shared
 app.setActivationPolicy(.regular)
 let delegate = AppDelegate()

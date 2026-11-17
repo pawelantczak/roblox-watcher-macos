@@ -35,6 +35,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
 4. **Dock & Menu Bar Integration**:
    - Running application icon in the Dock restores the main window when clicked (`applicationShouldHandleReopen`).
    - Menu bar status item displays live watcher state and provides start/stop and window display controls.
+5. **Single-Instance Enforcement**:
+   - Enforces a single running instance via POSIX non-blocking kernel lock (`flock`).
+   - Launching a second instance of `Roblox Watcher.app` activates the existing window and terminates immediately without creating duplicate processes.
 
 ---
 
