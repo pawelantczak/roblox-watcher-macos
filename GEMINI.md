@@ -28,9 +28,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
 2. **Reconnection & Teleport**:
    - Dispatches synthesized mouse events via dual-layer window activation (`NSAppleScript` + `NSRunningApplication.activate`).
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; never falls back to arbitrary hardcoded pixel coordinates.
-3. **Background Anti-AFK Keep-Alive**:
-   - Delivers background mouse clicks directly to the center of the Roblox window every 5 minutes using `CGEvent.postToPid(targetPID)`.
-   - Bypasses global cursor warping (`CGWarpMouseCursorPosition`), allowing the user to work uninterrupted without cursor movement or window focus changes.
+3. **Seamless Anti-AFK Keep-Alive**:
+   - Delivers a mouse click to the center of the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence.
+   - Momentarily focuses Roblox so `UserInputService` accepts the input to reset the 20-minute idle kick timer, then instantly restores previous application focus and returns the hardware cursor to its original position.
 4. **Dock & Menu Bar Integration**:
    - Running application icon in the Dock restores the main window when clicked (`applicationShouldHandleReopen`).
    - Menu bar status item displays live watcher state and provides start/stop and window display controls.

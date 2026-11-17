@@ -330,16 +330,34 @@ func clickScreenAtPoint(point: CGPoint, label: String = "Target", logger: (Strin
 
 func clickRobloxCenterInBackground(bounds: CGRect, pid: pid_t, logger: ((String) -> Void)? = nil) {
     let center = CGPoint(x: bounds.midX, y: bounds.midY)
-    guard let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: center, mouseButton: .left),
-          let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: center, mouseButton: .left) else {
-        return
+    let frontmost = NSWorkspace.shared.frontmostApplication
+    let isRobloxAlreadyFrontmost = frontmost?.bundleIdentifier == "com.roblox.RobloxPlayer"
+    let savedCursor = CGEvent(source: nil)?.location ?? .zero
+    
+    // 1. Momentarily focus Roblox so UserInputService accepts the event and resets the 20m AFK timer
+    if !isRobloxAlreadyFrontmost {
+        if let robloxApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.roblox.RobloxPlayer").first {
+            robloxApp.activate()
+        }
+        usleep(60_000) // 60ms for window server focus switch
     }
     
-    // Delivers directly to Roblox process port; does NOT move mouse cursor, does NOT steal focus
-    down.postToPid(pid)
-    usleep(50_000) // 50ms hold
-    up.postToPid(pid)
-    logger?("\(logTimestamp()) [Anti-AFK] Dispatched background keep-alive click to Roblox (PID \(pid)) at center (\(Int(center.x)), \(Int(center.y)))")
+    // 2. Warp to center, click down & up
+    CGWarpMouseCursorPosition(center)
+    if let down = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: center, mouseButton: .left),
+       let up = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: center, mouseButton: .left) {
+        down.post(tap: .cghidEventTap)
+        usleep(30_000)
+        up.post(tap: .cghidEventTap)
+    }
+    
+    // 3. Immediately restore previous application focus and cursor position
+    if !isRobloxAlreadyFrontmost {
+        CGWarpMouseCursorPosition(savedCursor)
+        frontmost?.activate()
+    }
+    
+    logger?("\(logTimestamp()) [Anti-AFK] Keep-alive click sent at (\(Int(center.x)), \(Int(center.y))) with seamless focus & cursor restore.")
 }
 
 func killAndRelaunchGame(placeId: String?, vipUrl: String?, logger: (String) -> Void) {

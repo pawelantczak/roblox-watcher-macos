@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-11-17
 
 ### Added
-- **Background Anti-AFK Keep-Alive**: Dispatches background mouse clicks to the center of the Roblox window every 5 minutes via targeted process delivery (`postToPid`), preventing 20-minute AFK disconnects without moving the mouse cursor or stealing application focus.
+- **Seamless Anti-AFK Keep-Alive**: Dispatches mouse clicks to the center of the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence, ensuring Roblox's `UserInputService` registers the input to reset the 20-minute AFK kick timer while immediately restoring previous window focus and cursor location.
 - **Anti-AFK Settings Toggle**: Added setting control in the configuration modal to enable/disable background keep-alive clicks.
 - **Agent Guidelines (`GEMINI.md`)**: Added repository documentation and explicit constraints prohibiting automated tagging and mandating changelog updates.
 
