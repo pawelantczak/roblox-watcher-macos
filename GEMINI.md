@@ -53,3 +53,8 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Every feature, fix, or breaking change must be documented in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md) adhering to the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
 3. **ALWAYS UPDATE GEMINI.md**:
    - Any architectural change, new script, configuration field, or rule modification must be recorded in this file ([GEMINI.md](file:///Users/krr/Sources/roblox-watcher/GEMINI.md)).
+4. **VERSION BUMPING DETERMINED BY CHANGELOG**:
+   - Always determine semver increments strictly from the release entries in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md):
+     - If there are **only fixes** (`### Fixed`), bump **patch** (`x.y.Z`).
+     - If there are any **new features or capabilities** (`### Added`), bump **minor** (`x.Y.0`).
+     - If there are **breaking architectural changes**, bump **major** (`X.0.0`).
