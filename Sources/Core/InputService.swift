@@ -39,8 +39,15 @@ public struct InputService {
         logger?("\(WindowService.logTimestamp()) [Success] Two-click sequence dispatched to \(label) (1st activate, 2nd action).")
     }
     
-    public static func clickRobloxCenterInBackground(bounds: CGRect, pid: pid_t, logger: ((String) -> Void)? = nil) {
-        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+    public static func nextAntiAfkInterval(base: Double, variance: Double = 15.0) -> Double {
+        let v = max(0.0, variance)
+        return max(30.0, base + Double.random(in: -v...v))
+    }
+
+    public static func clickRobloxCenterInBackground(bounds: CGRect, pid: pid_t, jitterMax: CGFloat = 8.0, logger: ((String) -> Void)? = nil) {
+        let jitterX = CGFloat.random(in: -jitterMax...jitterMax)
+        let jitterY = CGFloat.random(in: -jitterMax...jitterMax)
+        let targetPoint = CGPoint(x: bounds.midX + jitterX, y: bounds.midY + jitterY)
         let frontmost = NSWorkspace.shared.frontmostApplication
         let isRobloxAlreadyFrontmost = frontmost?.bundleIdentifier == "com.roblox.RobloxPlayer"
         let savedCursor = CGEvent(source: nil)?.location ?? .zero
@@ -56,12 +63,12 @@ public struct InputService {
             }
         }
         
-        // 2. Warp hardware cursor to center
-        CGWarpMouseCursorPosition(center)
+        // 2. Warp hardware cursor to target point with jitter
+        CGWarpMouseCursorPosition(targetPoint)
         
         // 3. Click 1: Confirms active window focus in AppKit
-        if let down1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: center, mouseButton: .left),
-           let up1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: center, mouseButton: .left) {
+        if let down1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: targetPoint, mouseButton: .left),
+           let up1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: targetPoint, mouseButton: .left) {
             down1.post(tap: .cghidEventTap)
             usleep(40_000)
             up1.post(tap: .cghidEventTap)
@@ -71,8 +78,8 @@ public struct InputService {
         usleep(100_000)
         
         // 4. Click 2: Guaranteed in-game input registered by Roblox UserInputService
-        if let down2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: center, mouseButton: .left),
-           let up2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: center, mouseButton: .left) {
+        if let down2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: targetPoint, mouseButton: .left),
+           let up2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: targetPoint, mouseButton: .left) {
             down2.post(tap: .cghidEventTap)
             usleep(40_000)
             up2.post(tap: .cghidEventTap)
@@ -87,6 +94,6 @@ public struct InputService {
             frontmost?.activate()
         }
         
-        logger?("\(WindowService.logTimestamp()) [Anti-AFK] Keep-alive dual-click sent at (\(Int(center.x)), \(Int(center.y))) with verified focus & restore.")
+        logger?("\(WindowService.logTimestamp()) [Anti-AFK] Keep-alive dual-click sent at (\(Int(targetPoint.x)), \(Int(targetPoint.y))) with verified focus & restore.")
     }
 }

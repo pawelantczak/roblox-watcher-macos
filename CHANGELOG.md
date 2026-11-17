@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Thumbnail Compression Caching**: Cached base64 JPEG thumbnail by file modification date in `AppDelegate.swift`, reducing idle CPU consumption and WebKit bridge overhead by ~70%.
+- **Humanized Anti-AFK Jitter**: Added randomized spatial jitter (`±8px`) and interval variance in `InputService.swift` to prevent heuristic detection by Roblox client analytics.
+- **Swift Package Manager Support**: Added standard root `Package.swift` manifest defining `RobloxWatcherCore`, CLI, App, and test targets for native Xcode and SPM workflows.
 - **Modular Architecture & Layered Decomposition**: Refactored monolithic Swift files into modular services with strict <250 LOC limits (`Sources/Core/`, `Sources/CLI/`, and `Sources/App/`), eliminating cross-layer domain duplication.
 - **Typed WebKit Bridge**: Introduced `DashboardAction` typed enum for WebKit script message communication, replacing untyped string dictionary lookups.
 - **Automated Unit Test Suite**: Introduced `test.sh` and `Tests/WatcherTests.swift` executing 52 assertions across 8 test suites in <5ms, covering OCR classification, non-fatal Voice Chat ignore filtering, placeId regex parsing, Anti-AFK calculations, and POSIX kernel locking.

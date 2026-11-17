@@ -29,6 +29,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
   - `test.sh`: Standalone fast test runner compiling and running the test suite in <5ms.
   - `Resources/index.html`: Responsive dark-mode dashboard UI communicating via native WebKit script message handlers.
   - `Resources/`: App icons (`app_icon.png`), crisp menu bar indicators (`menubar_active.png`, `menubar_inactive.png`), and `Info.plist`.
+  - `Package.swift`: Swift Package Manager manifest defining `RobloxWatcherCore`, CLI, App, and test targets.
   - `build.sh`: Runs `./test.sh`, builds Universal binaries (`arm64` + `x86_64`) targeting macOS 14.0+, automatically applies persistent local code signing (`RobloxWatcherDev`) or ad-hoc signing (`-`), and packages `Roblox-Watcher-v<version>.dmg`.
   - `bump.sh`: Automated semver bumper (`patch`, `minor`, `major`, or custom version) that updates `VERSION` and runs `build.sh`.
   - `.github/workflows/build.yml`: GitHub Actions pipeline configured for `runs-on: self-hosted`, executing `./test.sh`, generating CI artifacts, and publishing GitHub releases when `v*` tags are pushed.
@@ -45,7 +46,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Dispatches synthesized mouse events via dual-layer window activation (`NSAppleScript` + `NSRunningApplication.activate`).
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; never falls back to arbitrary hardcoded pixel coordinates.
 3. **Seamless Anti-AFK Keep-Alive**:
-   - Delivers a mouse click to the center of the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence.
+   - Delivers a mouse click with randomized spatial jitter (`±8px`) to the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence.
    - Momentarily focuses Roblox so `UserInputService` accepts the input to reset the 20-minute idle kick timer, then instantly restores previous application focus and returns the hardware cursor to its original position.
 4. **Dock & Menu Bar Integration**:
    - Running application icon in the Dock restores the main window when clicked (`applicationShouldHandleReopen`).

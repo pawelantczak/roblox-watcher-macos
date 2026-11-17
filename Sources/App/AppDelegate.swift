@@ -16,6 +16,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     public var toggleWatcherMenuItem: NSMenuItem!
     public var showWindowMenuItem: NSMenuItem!
     
+    // Thumbnail Caching
+    private var lastThumbnailModDate: Date? = nil
+    private var cachedThumbnailBase64: String? = nil
+    
     public func applicationDidFinishLaunching(_ notification: Notification) {
         let windowWidth: CGFloat = 1040
         let windowHeight: CGFloat = 720
@@ -184,7 +188,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let mgr = WatcherManager.shared
         let robloxInfo = WindowService.findRobloxProcess()
         let screenshotURL = StorageService.getScreenshotFileURL()
-        let base64Img = VisionService.createThumbnailBase64(from: screenshotURL, maxDimension: 960)
+        let fileAttrs = try? FileManager.default.attributesOfItem(atPath: screenshotURL.path)
+        let currentModDate = fileAttrs?[.modificationDate] as? Date
+        if currentModDate != lastThumbnailModDate || cachedThumbnailBase64 == nil {
+            cachedThumbnailBase64 = VisionService.createThumbnailBase64(from: screenshotURL, maxDimension: 960)
+            lastThumbnailModDate = currentModDate
+        }
+        let base64Img = cachedThumbnailBase64
         
         var liveCoords: [String: Int]? = nil
         if let norm = mgr.latestEventNormalizedCoords, let win = WindowService.findRobloxWindow() {
