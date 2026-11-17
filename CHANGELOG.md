@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Seamless Anti-AFK Keep-Alive**: Dispatches mouse clicks to the center of the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence, ensuring Roblox's `UserInputService` registers the input to reset the 20-minute AFK kick timer while immediately restoring previous window focus and cursor location.
 - **Anti-AFK Settings Toggle**: Added setting control in the configuration modal to enable/disable background keep-alive clicks.
 - **Anti-AFK Metric Card**: Added a 5th top-row dashboard card displaying live Anti-AFK state (`ENABLED`, `DISABLED`, `PAUSED`) and real-time countdown to the next keep-alive click.
+- **Log Stream Colour Coding & Smart Scroll**: Highlighted logs by category (permissions/errors: red, reconnects: yellow, anti-afk: green). Pauses auto-scroll when user scrolls up to inspect history, with a "Resume live" button to re-engage live streaming.
 - **Agent Guidelines (`GEMINI.md`)**: Added repository documentation and explicit constraints prohibiting automated tagging and mandating changelog updates.
 
 ### Fixed

@@ -213,9 +213,14 @@
         <div class="flex items-center justify-between mb-2 shrink-0 h-5">
           <div class="flex items-center gap-2">
             <h2 class="text-xs font-bold text-white">Live Activity Stream</h2>
-            <span class="text-xs text-cyan-400 font-mono font-medium">(auto-scroll active)</span>
+            <span id="autoScrollBadge" class="text-xs text-cyan-400 font-mono font-medium">(live)</span>
           </div>
-          <button id="clearLogsBtn" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">Clear</button>
+          <div class="flex items-center gap-2.5">
+            <button id="resumeLiveBtn" class="hidden text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors flex items-center gap-1 font-semibold">
+              <span>⬇ Resume live</span>
+            </button>
+            <button id="clearLogsBtn" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">Clear</button>
+          </div>
         </div>
         
         <!-- Dedicated scroll box: strictly bounded by flex-1 min-h-0 and internal overflow-y-scroll -->
@@ -417,6 +422,45 @@
       sendNative({ action: 'refreshScreenshot' });
     });
 
+    let isAutoScrollEnabled = true;
+    const autoScrollBadge = document.getElementById('autoScrollBadge');
+    const resumeLiveBtn = document.getElementById('resumeLiveBtn');
+
+    function setAutoScroll(enabled) {
+      isAutoScrollEnabled = enabled;
+      if (enabled) {
+        if (autoScrollBadge) {
+          autoScrollBadge.innerText = '(live)';
+          autoScrollBadge.className = 'text-xs text-cyan-400 font-mono font-medium';
+        }
+        if (resumeLiveBtn) resumeLiveBtn.classList.add('hidden');
+        logsConsole.scrollTop = logsConsole.scrollHeight;
+      } else {
+        if (autoScrollBadge) {
+          autoScrollBadge.innerText = '(paused)';
+          autoScrollBadge.className = 'text-xs text-amber-400 font-mono font-medium';
+        }
+        if (resumeLiveBtn) resumeLiveBtn.classList.remove('hidden');
+      }
+    }
+
+    logsConsole.addEventListener('scroll', () => {
+      const distanceToBottom = logsConsole.scrollHeight - logsConsole.scrollTop - logsConsole.clientHeight;
+      if (distanceToBottom > 35) {
+        if (isAutoScrollEnabled) {
+          setAutoScroll(false);
+        }
+      } else {
+        if (!isAutoScrollEnabled) {
+          setAutoScroll(true);
+        }
+      }
+    });
+
+    resumeLiveBtn.addEventListener('click', () => {
+      setAutoScroll(true);
+    });
+
     document.getElementById('clearLogsBtn').addEventListener('click', () => {
       logsConsole.innerHTML = '<div class="text-slate-500">// Console cleared</div>';
     });
@@ -510,19 +554,34 @@
         eventIconCard.classList.add('hidden');
       }
 
-      // Live Logs & AUTO-SCROLL TO BOTTOM
+      // Live Logs & CONDITIONAL AUTO-SCROLL
       if (data.logs && data.logs.length > 0) {
         logsConsole.innerHTML = data.logs.map(l => {
+          const lower = l.toLowerCase();
           let color = 'text-slate-300';
-          if (l.includes('[ALERT]') || l.includes('Error')) color = 'text-rose-400 font-bold';
-          else if (l.includes('[Success]') || l.includes('[Target]') || l.includes('[Decision]')) color = 'text-cyan-300 font-semibold';
-          else if (l.includes('[Process]')) color = 'text-slate-400';
-          else if (l.includes('[Countdown]')) color = 'text-cyan-500';
+          
+          if (lower.includes('permission') || lower.includes('[alert]') || lower.includes('[error]')) {
+            // Lack of permissions / errors: RED
+            color = 'text-rose-400 font-bold';
+          } else if (lower.includes('[anti-afk]') || lower.includes('keep-alive')) {
+            // Anti-AFK action: GREEN
+            color = 'text-emerald-400 font-semibold';
+          } else if (lower.includes('reconnect') || lower.includes('relaunch') || lower.includes('[cooldown]')) {
+            // Reconnect / cooldown: YELLOW
+            color = 'text-amber-300 font-semibold';
+          } else if (lower.includes('[event nav]') || lower.includes('[decision]') || lower.includes('[action]') || lower.includes('[success]')) {
+            color = 'text-cyan-300 font-semibold';
+          } else if (lower.includes('[process]')) {
+            color = 'text-slate-400 font-medium';
+          } else if (lower.includes('[countdown]')) {
+            color = 'text-cyan-500';
+          }
           return `<div class="${color}">${escapeHtml(l)}</div>`;
         }).join('');
 
-        // Guaranteed auto-scroll to the latest log line
-        logsConsole.scrollTop = logsConsole.scrollHeight;
+        if (isAutoScrollEnabled) {
+          logsConsole.scrollTop = logsConsole.scrollHeight;
+        }
       }
 
       // Live Screenshot Thumbnail
