@@ -21,7 +21,7 @@ echo "=========================================="
 CLI_NAME="roblox-watcher-v${VERSION}"
 # Detect persistent code signing identity to preserve macOS permissions across rebuilds
 SIGN_IDENTITY="-"
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "RobloxWatcherDev"; then
+if security find-identity -p codesigning 2>/dev/null | grep -q "RobloxWatcherDev"; then
     SIGN_IDENTITY="RobloxWatcherDev"
     echo "==> Found persistent code signing identity: $SIGN_IDENTITY"
 fi
