@@ -7,19 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2026-11-17
+## [1.1.1] - 2026-11-17
 
 ### Added
-- **Seamless Anti-AFK Keep-Alive**: Dispatches mouse clicks to the center of the Roblox window every 5 minutes using a 50ms Focus-Click-Restore sequence, ensuring Roblox's `UserInputService` registers the input to reset the 20-minute AFK kick timer while immediately restoring previous window focus and cursor location.
-- **Anti-AFK Settings Toggle**: Added setting control in the configuration modal to enable/disable background keep-alive clicks.
-- **Anti-AFK Metric Card**: Added a 5th top-row dashboard card displaying live Anti-AFK state (`ENABLED`, `DISABLED`, `PAUSED`) and real-time countdown to the next keep-alive click.
-- **Log Stream Colour Coding & Smart Scroll**: Highlighted logs by category (permissions/errors: red, reconnects: yellow, anti-afk: green). Pauses auto-scroll when user scrolls up to inspect history, with a "Resume live" button to re-engage live streaming.
-- **Agent Guidelines (`GEMINI.md`)**: Added repository documentation and explicit constraints prohibiting automated tagging and mandating changelog updates.
 - **Single-Instance Enforcement**: Utilizes kernel-level file locks (`flock`) to restrict execution to a single app instance. Re-opening `Roblox Watcher.app` activates and focuses the running window instead of creating duplicate processes.
-- **Persistent Self-Signed Identity Detection**: Configured `build.sh` to automatically sign with a free local self-signed certificate (`RobloxWatcherDev`) when present, preserving macOS Accessibility and Screen Recording permissions across new builds without needing a paid developer account.
+- **Log Stream Colour Coding & Smart Scroll**: Highlighted logs by category (permissions/errors: red, reconnects: yellow, anti-afk: green). Pauses auto-scroll when user scrolls up to inspect history, with a "Resume live" button to re-engage live streaming.
+- **Anti-AFK Metric Card**: Added a 5th top-row dashboard card displaying live Anti-AFK state (`ENABLED`, `DISABLED`, `PAUSED`) and real-time countdown, positioned directly after Watcher Status.
+- **Persistent Self-Signed Identity Detection**: Configured `build.sh` to automatically sign with a free local self-signed certificate (`RobloxWatcherDev`) when present, preserving macOS Accessibility and Screen Recording permissions across new builds.
 
 ### Fixed
 - **Voice Chat Disconnect Filtering**: Excluded non-fatal notification toasts such as "You've disconnected from Voice Chat" via configurable `ignorePhrases` (`voice chat`, `voice`) to prevent false-positive reconnects and restarts.
+- **Reliable Anti-AFK Execution**: Upgraded background keep-alive to a 50ms Focus-Click-Restore sequence so Roblox's `UserInputService` registers the click and resets the 20-minute idle timer.
+
+---
+
+## [1.1.0] - 2026-11-17
+
+### Added
+- **Seamless Anti-AFK Keep-Alive**: Background keep-alive engine with 5-minute interval to maintain active Roblox sessions.
+- **Anti-AFK Settings Toggle**: Added setting control in the configuration modal to enable/disable background keep-alive clicks.
+- **Agent Guidelines (`GEMINI.md`)**: Added repository documentation and explicit constraints prohibiting automated tagging and mandating changelog updates.
 
 ---
 
