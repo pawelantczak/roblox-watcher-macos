@@ -111,7 +111,7 @@
   <main class="flex-1 min-h-0 w-full px-5 py-3 flex flex-col gap-3 overflow-hidden">
 
     <!-- Row 1: Metrics Cards (Fixed 74px, Bigger Fonts) -->
-    <div class="grid grid-cols-4 gap-3 shrink-0 h-[74px]">
+    <div class="grid grid-cols-5 gap-3 shrink-0 h-[74px]">
       <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
         <span class="text-xs text-slate-400 font-semibold tracking-wide">Watcher Status</span>
         <div class="flex items-center gap-2">
@@ -139,6 +139,14 @@
         <span class="text-xs text-slate-400 font-semibold tracking-wide">Target Place ID</span>
         <div class="flex items-baseline">
           <span id="targetPlaceId" class="font-mono text-sm font-bold text-slate-100">--</span>
+        </div>
+      </div>
+
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide">Anti-AFK Keep-Alive</span>
+        <div class="flex items-baseline justify-between">
+          <span id="antiAfkState" class="font-mono text-sm font-bold text-slate-500">DISABLED</span>
+          <span id="antiAfkCountdown" class="font-mono text-xs text-slate-400 font-semibold">--</span>
         </div>
       </div>
     </div>
@@ -445,6 +453,36 @@
       restartsCount.innerText = data.restarts ?? 0;
       processPid.innerText = data.robloxPid ? `PID: ${data.robloxPid}` : 'Not Running';
       targetPlaceId.innerText = data.placeId ?? '--';
+
+      // Anti-AFK Metrics Card
+      const afkState = document.getElementById('antiAfkState');
+      const afkCountdown = document.getElementById('antiAfkCountdown');
+      if (afkState && afkCountdown) {
+        if (!data.antiAfkEnabled) {
+          afkState.innerText = 'DISABLED';
+          afkState.className = 'font-mono text-sm font-bold text-slate-500';
+          afkCountdown.innerText = 'OFF';
+          afkCountdown.className = 'font-mono text-xs text-slate-600 font-semibold';
+        } else if (!isRunning) {
+          afkState.innerText = 'PAUSED';
+          afkState.className = 'font-mono text-sm font-bold text-slate-400';
+          afkCountdown.innerText = 'Standby';
+          afkCountdown.className = 'font-mono text-xs text-slate-500 font-semibold';
+        } else {
+          afkState.innerText = 'ENABLED';
+          afkState.className = 'font-mono text-sm font-bold text-cyan-400';
+          const remaining = data.antiAfkCountdown ?? 0;
+          if (remaining > 0) {
+            const m = Math.floor(remaining / 60);
+            const s = remaining % 60;
+            afkCountdown.innerText = m > 0 ? `in ${m}m ${s < 10 ? '0' : ''}${s}s` : `in ${s}s`;
+            afkCountdown.className = 'font-mono text-xs text-cyan-400 font-semibold';
+          } else {
+            afkCountdown.innerText = 'Clicking...';
+            afkCountdown.className = 'font-mono text-xs text-emerald-400 font-semibold animate-pulse';
+          }
+        }
+      }
 
       // Event Icon Debug Card
       if (data.autoTeleportToEvent) {

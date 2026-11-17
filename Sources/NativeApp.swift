@@ -457,6 +457,7 @@ class WatcherManager {
     var latestEventCropBase64: String? = nil
     var latestEventNormalizedCoords: CGPoint? = nil
     var latestEventMatchedText: String? = nil
+    var lastAntiAfkClickTimestamp: Date = Date()
     
     init() {
         lastKnownPlaceId = config.placeId
@@ -482,6 +483,7 @@ class WatcherManager {
         isRunning = true
         shouldStop = false
         sessionRestarts = 0
+        lastAntiAfkClickTimestamp = Date()
         config = loadConfig()
         stats = loadStats()
         
@@ -569,7 +571,7 @@ class WatcherManager {
     private func runLoop() {
         let screenshotPath = getScreenshotFileURL().path
         var lastActionTimestamp = Date.distantPast
-        var lastAntiAfkClickTimestamp = Date()
+        self.lastAntiAfkClickTimestamp = Date()
         
         appendLog("\(logTimestamp()) [Config] Check Interval: \(config.checkIntervalSeconds)s | Target: \(config.reconnectButtonText)")
         appendLog("\(logTimestamp()) [Status] Watcher is actively monitoring screen.\n")
@@ -700,8 +702,8 @@ class WatcherManager {
                             }
                             
                             // Anti-AFK Keep-Alive Click (every 5 minutes in background)
-                            if config.antiAfkEnabled && now.timeIntervalSince(lastAntiAfkClickTimestamp) >= config.antiAfkIntervalSeconds {
-                                lastAntiAfkClickTimestamp = now
+                            if config.antiAfkEnabled && now.timeIntervalSince(self.lastAntiAfkClickTimestamp) >= config.antiAfkIntervalSeconds {
+                                self.lastAntiAfkClickTimestamp = now
                                 let liveWin = findRobloxWindow()
                                 let currentBounds = liveWin?.bounds ?? winBounds
                                 let targetPid = liveWin?.ownerPID ?? (findRobloxProcess()?.pid ?? 0)
@@ -985,6 +987,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             liveCoords = ["x": liveX, "y": liveY]
         }
         
+        var antiAfkSecondsRemaining: Int = 0
+        if mgr.isRunning && mgr.config.antiAfkEnabled {
+            let elapsed = Date().timeIntervalSince(mgr.lastAntiAfkClickTimestamp)
+            antiAfkSecondsRemaining = max(0, Int(mgr.config.antiAfkIntervalSeconds - elapsed))
+        }
+        
         let state: [String: Any] = [
             "running": mgr.isRunning,
             "robloxPid": robloxInfo?.pid as Any,
@@ -995,6 +1003,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             "screenshotBase64": base64Img as Any,
             "autoTeleportToEvent": mgr.config.autoTeleportToEvent,
             "antiAfkEnabled": mgr.config.antiAfkEnabled,
+            "antiAfkCountdown": antiAfkSecondsRemaining,
             "eventKeywords": mgr.config.eventTargetKeywords,
             "eventIconBase64": mgr.latestEventCropBase64 as Any,
             "eventCoords": liveCoords as Any,
