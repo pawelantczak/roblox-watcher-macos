@@ -45,6 +45,20 @@ func main() {
     }
     print("\(logTime()) [Status] Watcher is actively monitoring screen.\n")
     
+    // Display sleep & auto-lock prevention
+    PowerService.shared.enableSleepPrevention(reason: "Roblox Watcher CLI Active Monitoring")
+    print("\(logTime()) [Power] macOS display sleep & auto-lock prevention active.\n")
+    
+    signal(SIGINT) { _ in
+        print("\n[Shutdown] Terminating roblox-watcher daemon...")
+        PowerService.shared.disableSleepPrevention()
+        exit(0)
+    }
+    signal(SIGTERM) { _ in
+        PowerService.shared.disableSleepPrevention()
+        exit(0)
+    }
+    
     if !WindowService.checkScreenRecordingPermission() {
         print("\(logTime()) [Notice] Waiting for Screen Recording permission to be granted in System Settings...\n")
     }

@@ -214,6 +214,34 @@ func testSingleInstanceKernelLock() {
     }
 }
 
+func testPowerServiceSleepPrevention() {
+    print("▶ Running: testPowerServiceSleepPrevention")
+    let power = PowerService.shared
+    
+    // Initial state
+    assertFalse(power.isHoldingAssertion, "PowerService should not hold assertion initially")
+    
+    // Enable
+    let acquired = power.enableSleepPrevention(reason: "Unit Test Assertion")
+    assertTrue(acquired, "enableSleepPrevention should return true")
+    assertTrue(power.isHoldingAssertion, "isHoldingAssertion should be true after enable")
+    
+    // Redundant enable should succeed gracefully
+    let redundantAcquired = power.enableSleepPrevention(reason: "Unit Test Redundant")
+    assertTrue(redundantAcquired, "Redundant enable should return true")
+    assertTrue(power.isHoldingAssertion)
+    
+    // Disable
+    let released = power.disableSleepPrevention()
+    assertTrue(released, "disableSleepPrevention should return true")
+    assertFalse(power.isHoldingAssertion, "isHoldingAssertion should be false after disable")
+    
+    // Redundant disable should succeed gracefully
+    let redundantReleased = power.disableSleepPrevention()
+    assertTrue(redundantReleased, "Redundant disable should return true")
+    assertFalse(power.isHoldingAssertion)
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -232,6 +260,7 @@ struct TestRunner {
         testPlaceIdParsing()
         testAntiAfkCountdownFormatting()
         testSingleInstanceKernelLock()
+        testPowerServiceSleepPrevention()
         
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000.0
         print("==========================================")

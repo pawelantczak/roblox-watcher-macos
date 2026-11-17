@@ -19,6 +19,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
     - `GameService.swift`: Game relaunching and event area navigation workflows.
     - `StorageService.swift`: Deterministic JSON persistence and version resolution.
     - `LockManager.swift`: POSIX advisory kernel lock (`flock`) engine.
+    - `PowerService.swift`: IOKit `IOPMAssertion` display sleep and auto-lock prevention engine.
   - `Sources/CLI/main.swift`: Headless CLI daemon (~170 lines) polling loop.
   - `Sources/App/`: Modular Native Cocoa GUI application:
     - `AppEntry.swift`: `@main` bootstrap and single-instance validation.
@@ -54,6 +55,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
 5. **Single-Instance Enforcement**:
    - Enforces a single running instance via POSIX non-blocking kernel lock (`flock`).
    - Launching a second instance of `Roblox Watcher.app` activates the existing window and terminates immediately without creating duplicate processes.
+6. **macOS Display Sleep & Auto-Lock Prevention**:
+   - Manages native `IOPMAssertion` (`kIOPMAssertionTypePreventUserIdleDisplaySleep`) while the watcher is running.
+   - Prevents the macOS screensaver, display dimming, and screen lock from triggering, ensuring uninterrupted Vision OCR analysis and mouse dispatch without disrupting the system when stopped.
 
 ---
 

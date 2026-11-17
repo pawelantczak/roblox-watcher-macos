@@ -53,6 +53,8 @@ public class WatcherManager {
         stats = StorageService.loadStats()
         
         appendLog("\(WindowService.logTimestamp()) [System] Starting native watcher engine...")
+        PowerService.shared.enableSleepPrevention(reason: "Roblox Watcher Monitoring & Keep-Alive")
+        appendLog("\(WindowService.logTimestamp()) [Power] Display sleep & auto-lock prevention active.")
         
         workerThread = Thread { [weak self] in
             self?.runLoop()
@@ -64,6 +66,8 @@ public class WatcherManager {
         guard isRunning else { return }
         shouldStop = true
         isRunning = false
+        PowerService.shared.disableSleepPrevention()
+        appendLog("\(WindowService.logTimestamp()) [Power] Display sleep prevention released.")
         appendLog("\(WindowService.logTimestamp()) [System] Stopped watcher engine.")
     }
     

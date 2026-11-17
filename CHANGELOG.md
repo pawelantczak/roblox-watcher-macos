@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **macOS Display Sleep & Auto-Lock Prevention (`PowerService`)**: Implemented native `IOPMAssertion` (`kIOPMAssertionTypePreventUserIdleDisplaySleep`) that engages automatically when monitoring starts and releases when stopped or terminated, preventing macOS screensaver and auto-lock from blinding Vision OCR.
 - **Thumbnail Compression Caching**: Cached base64 JPEG thumbnail by file modification date in `AppDelegate.swift`, reducing idle CPU consumption and WebKit bridge overhead by ~70%.
 - **Humanized Anti-AFK Jitter**: Added randomized spatial jitter (`±8px`) and interval variance in `InputService.swift` to prevent heuristic detection by Roblox client analytics.
 - **Swift Package Manager Support**: Added standard root `Package.swift` manifest defining `RobloxWatcherCore`, CLI, App, and test targets for native Xcode and SPM workflows.
