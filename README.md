@@ -71,7 +71,7 @@ Run the unified build script:
 
 ### Build Artifacts
 `./build.sh` produces three targets:
-- `roblox-watcher`: Standalone CLI binary.
+- `roblox-watcher-v<version>`: Standalone Universal CLI binary (symlinked as `roblox-watcher`).
 - `Roblox Watcher.app`: Native macOS application bundle.
 - `Roblox-Watcher-v<version>.dmg`: Distributable disk image with `/Applications` drag-and-drop installer.
 

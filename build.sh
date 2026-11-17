@@ -18,25 +18,27 @@ echo "    Building Roblox Watcher Suite v$VERSION"
 echo "=========================================="
 
 # 1. Build CLI Tool (Universal Binary: arm64 + x86_64)
-echo "==> [1/3] Compiling CLI binary (Universal)..."
+CLI_NAME="roblox-watcher-v${VERSION}"
+echo "==> [1/3] Compiling CLI binary ($CLI_NAME, Universal)..."
 swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
     Sources/main.swift \
-    -o "$DIR/roblox-watcher_arm64"
+    -o "$DIR/${CLI_NAME}_arm64"
 
 swiftc -O -target x86_64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
     Sources/main.swift \
-    -o "$DIR/roblox-watcher_x86_64"
+    -o "$DIR/${CLI_NAME}_x86_64"
 
-lipo -create -output "$DIR/roblox-watcher" "$DIR/roblox-watcher_arm64" "$DIR/roblox-watcher_x86_64"
-rm -f "$DIR/roblox-watcher_arm64" "$DIR/roblox-watcher_x86_64"
-chmod +x "$DIR/roblox-watcher"
-codesign --force --sign - "$DIR/roblox-watcher" 2>/dev/null || true
+lipo -create -output "$DIR/$CLI_NAME" "$DIR/${CLI_NAME}_arm64" "$DIR/${CLI_NAME}_x86_64"
+rm -f "$DIR/${CLI_NAME}_arm64" "$DIR/${CLI_NAME}_x86_64"
+chmod +x "$DIR/$CLI_NAME"
+codesign --force --sign - "$DIR/$CLI_NAME" 2>/dev/null || true
+ln -sf "$DIR/$CLI_NAME" "$DIR/roblox-watcher"
 
 # 2. Build Native macOS App Bundle (Universal Binary: arm64 + x86_64)
 echo "==> [2/3] Assembling Roblox Watcher.app (v$VERSION, Universal)..."
@@ -113,7 +115,7 @@ rm -rf "$DIR/.build"
 echo "=========================================="
 echo " Build Success!"
 echo " - Version:    $VERSION (Universal: arm64 + x86_64)"
-echo " - CLI Tool:   $DIR/roblox-watcher"
+echo " - CLI Tool:   $DIR/$CLI_NAME (linked as roblox-watcher)"
 echo " - macOS App:  $DIR/$APP_NAME"
 echo " - DMG Image:  $DIR/$DMG_NAME"
 echo "=========================================="

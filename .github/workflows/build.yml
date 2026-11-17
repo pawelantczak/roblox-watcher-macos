@@ -39,7 +39,7 @@ jobs:
           name: Roblox-Watcher-v${{ steps.get_version.outputs.version }}
           path: |
             Roblox-Watcher-*.dmg
-            roblox-watcher
+            roblox-watcher-v*
           retention-days: 14
 
       - name: Publish GitHub Release (Tags Only)
@@ -50,4 +50,4 @@ jobs:
           generate_release_notes: true
           files: |
             Roblox-Watcher-*.dmg
-            roblox-watcher
+            roblox-watcher-v*
