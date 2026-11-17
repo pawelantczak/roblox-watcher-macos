@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full w-full overflow-hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Roblox Watcher | ps99clan.xyz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              950: '#070A0F',
+              900: '#0B0F17',
+              850: '#0F1622',
+              800: '#141D2D',
+              700: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden !important;
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Hide outer scrollbars */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Dedicated visible scrollbar for logs console ONLY */
+    #logsConsole {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    #logsConsole::-webkit-scrollbar {
+      display: block !important;
+      width: 7px;
+    }
+    #logsConsole::-webkit-scrollbar-track {
+      background: #070A0F;
+      border-radius: 4px;
+    }
+    #logsConsole::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 4px;
+      border: 1px solid #0B0F17;
+    }
+    #logsConsole::-webkit-scrollbar-thumb:hover {
+      background: #38BDF8;
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-slate-100 h-full w-full flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- Header (Fixed 60px) -->
+  <header class="h-[60px] border-b border-slate-800/80 bg-dark-850 px-5 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-3.5">
+      <div class="flex items-center gap-3 group">
+        <img src="app_icon.png" alt="Roblox Watcher" class="w-[44px] h-[44px] group-hover:scale-105 transition-transform drop-shadow" />
+        <div class="flex flex-col font-mono">
+          <span class="font-black text-white text-lg tracking-tight leading-tight">
+            Roblox <span class="text-cyan-400">Watcher</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Status Pulse Indicator (Glows only when watcher is active) -->
+      <div id="pulseBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-950 border border-slate-800 text-xs font-mono transition-all">
+        <span class="relative flex h-2.5 w-2.5">
+          <span id="pulsePing" class="hidden absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75 animate-ping"></span>
+          <span id="pulseDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-600 transition-colors"></span>
+        </span>
+        <span id="pulseLabel" class="text-slate-400 font-medium">Inactive</span>
+      </div>
+
+      <!-- Settings Button -->
+      <button id="openSettingsBtn" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-dark-950/80 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-slate-200 text-xs font-medium transition-all">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        Settings
+      </button>
+
+      <!-- Start/Stop Button -->
+      <button id="toggleWatcherBtn" class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-bold text-xs transition-all shadow-lg bg-cyan-500 hover:bg-cyan-400 text-dark-950 font-mono shadow-cyan-500/20">
+        <span class="w-2 h-2 rounded-full bg-dark-950"></span>
+        <span>Start Watcher</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content (Fills remaining height, strictly overflow-hidden, no window scroll) -->
+  <main class="flex-1 min-h-0 w-full px-5 py-3 flex flex-col gap-3 overflow-hidden">
+
+    <!-- Row 1: Metrics Cards (Fixed 74px, Bigger Fonts) -->
+    <div class="grid grid-cols-4 gap-3 shrink-0 h-[74px]">
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide">Watcher Status</span>
+        <div class="flex items-center gap-2">
+          <span id="statusIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+          <span id="statusText" class="font-mono text-sm font-bold text-slate-400">STOPPED</span>
+        </div>
+      </div>
+
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide">Game Restarts</span>
+        <div class="flex items-baseline gap-2">
+          <span id="restartsCount" class="font-mono text-2xl font-black text-cyan-400 leading-none">0</span>
+          <span class="text-xs text-slate-500 font-mono">rejoins</span>
+        </div>
+      </div>
+
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide">Roblox Process</span>
+        <div class="flex items-baseline">
+          <span id="processPid" class="font-mono text-sm font-bold text-slate-100 truncate">Not detected</span>
+        </div>
+      </div>
+
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide">Target Place ID</span>
+        <div class="flex items-baseline">
+          <span id="targetPlaceId" class="font-mono text-sm font-bold text-slate-100">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Event Icon Debug & Quick Actions Bar (Fixed 78px, Large Event Icon Crop) -->
+    <div class="bg-dark-950/80 border border-slate-800/90 rounded-xl px-4 py-2 flex items-center justify-between shrink-0 h-[78px]">
+      <!-- Event Icon Preview (Enlarged to 60px) -->
+      <div id="eventIconCard" class="flex items-center gap-3.5">
+        <div class="relative w-[58px] h-[58px] rounded-xl bg-dark-900 border border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner p-1">
+          <img id="eventIconImg" src="" alt="Event Icon Crop" class="hidden w-full h-full object-contain rounded-lg" />
+          <div id="eventIconEmpty" class="text-slate-600 font-mono text-xs text-center flex flex-col items-center">
+            <svg class="w-5 h-5 mx-auto text-slate-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-white">Event Icon:</span>
+            <span id="eventIconStatusBadge" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-medium">Scanning UI</span>
+          </div>
+          <span id="eventIconCoordsLabel" class="text-xs text-slate-300 font-mono mt-0.5">Searching left panel for tycoon icon...</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex items-center gap-2.5">
+        <button id="testTeleportBtn" class="px-3.5 py-1.5 rounded-lg bg-dark-850 border border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800 text-xs font-mono font-semibold text-cyan-300 transition-all flex items-center gap-1.5 shadow-sm">
+          <span>⚡ Test Click</span>
+        </button>
+        <button id="refreshScreenshotBtn" class="px-3.5 py-1.5 rounded-lg bg-dark-850 border border-slate-700 hover:border-slate-600 hover:bg-slate-800 text-xs font-mono font-semibold text-slate-300 transition-all flex items-center gap-1.5 shadow-sm">
+          <span>🔄 Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 3: Split Grid (Screenshot & Stream Elements with reduced height) -->
+    <!-- min-h-0 ensures it fills the remaining bounded height without pushing outer page down -->
+    <div class="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-hidden" style="grid-template-rows: minmax(0, 1fr);">
+      
+      <!-- Live Screenshot Card -->
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl p-3 flex flex-col min-h-0 overflow-hidden">
+        <div class="flex items-center justify-between mb-2 shrink-0 h-5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-bold text-white">Roblox Window Capture</h2>
+            <span class="text-xs px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono" id="screenTimestamp">ready</span>
+          </div>
+          <span class="text-xs text-slate-500 font-mono">Target window only</span>
+        </div>
+        
+        <div class="relative flex-1 min-h-0 bg-dark-950 border border-slate-800/80 rounded-lg overflow-hidden flex items-center justify-center p-1">
+          <img id="screenshotImg" src="" alt="Latest screen capture" class="hidden w-full h-full object-contain cursor-pointer" />
+          <div id="screenshotEmpty" class="text-slate-600 font-mono text-xs flex flex-col items-center gap-1.5">
+            <svg class="w-7 h-7 text-slate-700 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Waiting for Roblox window...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Terminal Console with Dedicated Internal Scroll Container -->
+      <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl p-3 flex flex-col min-h-0 overflow-hidden">
+        <div class="flex items-center justify-between mb-2 shrink-0 h-5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-bold text-white">Live Activity Stream</h2>
+            <span class="text-xs text-cyan-400 font-mono font-medium">(auto-scroll active)</span>
+          </div>
+          <button id="clearLogsBtn" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">Clear</button>
+        </div>
+        
+        <!-- Dedicated scroll box: strictly bounded by flex-1 min-h-0 and internal overflow-y-scroll -->
+        <div id="logsConsole" class="flex-1 min-h-0 bg-dark-950 border border-slate-800/80 rounded-lg p-2.5 font-mono text-xs leading-relaxed text-slate-300 overflow-y-scroll space-y-1 select-text" style="min-height: 0; max-height: 100%;">
+          <div class="text-slate-500">// Ready. Click "Start Watcher" above to begin monitoring.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Settings Modal (Hidden by Default) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/85 backdrop-blur-sm">
+    <div class="bg-dark-850 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div class="flex items-center gap-2">
+          <h3 class="font-bold text-white text-sm">Watcher Settings</h3>
+          <span class="text-xs text-slate-500 font-mono">config.json</span>
+        </div>
+        <button id="closeSettingsBtn" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <form id="settingsForm" class="space-y-3 text-xs font-mono">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-slate-400 mb-1">Check Interval (seconds)</label>
+            <input type="number" step="0.5" id="cfgInterval" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Cooldown (seconds)</label>
+            <input type="number" step="1" id="cfgCooldown" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Target Place ID (Override)</label>
+          <input type="text" id="cfgPlaceId" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">VIP / Private Server Link (Optional)</label>
+          <input type="text" id="cfgVipUrl" placeholder="https://www.roblox.com/games/...?privateServerLinkCode=..." class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Reconnect Button Label (OCR)</label>
+          <input type="text" id="cfgButtonText" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Event Target Keywords (comma separated)</label>
+          <input type="text" id="cfgEventKeywords" placeholder="pumpkin, tycoon" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Disconnect Phrases (one per line)</label>
+          <textarea id="cfgDisconnectKeywords" rows="3" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs"></textarea>
+        </div>
+
+        <div class="space-y-1.5 border-t border-slate-800 pt-2.5">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="cfgAutoTeleport" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
+            <span class="text-slate-300">Auto Teleport to Event Area after reconnect</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="cfgAutoClick" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
+            <span class="text-slate-300">Auto Click Reconnect button</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="cfgAutoRelaunch" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
+            <span class="text-slate-300">Auto Relaunch game on Kick / Server Restart</span>
+          </label>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+          <span class="text-slate-400 text-xs">Restarts counter:</span>
+          <button type="button" id="resetStatsBtn" class="px-2.5 py-1 rounded-lg bg-dark-950 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-400 text-xs font-mono transition-colors">Reset counter to 0</button>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2.5 border-t border-slate-800">
+          <button type="button" id="cancelSettingsBtn" class="px-3.5 py-1.5 rounded-lg bg-dark-950 border border-slate-800 hover:bg-slate-800 text-slate-400">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-dark-950 font-bold">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer (Fixed 32px) -->
+  <footer class="h-[32px] border-t border-slate-800/80 bg-dark-950 px-5 flex items-center justify-between text-xs text-slate-500 font-mono shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-slate-400 font-semibold">Roblox Watcher</span>
+      <span id="footerVersion" class="text-cyan-400/90 bg-cyan-950/40 border border-cyan-800/50 px-1.5 py-0.5 rounded text-[10px] font-semibold">v1.0.0</span>
+      <span>•</span>
+      <a href="#" onclick="openExternal('https://ps99clan.xyz'); return false;" class="text-cyan-400 hover:underline font-semibold cursor-pointer">
+        by ps99clan.xyz
+      </a>
+    </div>
+    <div>
+      <span class="text-slate-500">Autonomous Reconnect & Event Monitor</span>
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script>
+    let isRunning = false;
+
+    const statusText = document.getElementById('statusText');
+    const statusIndicatorDot = document.getElementById('statusIndicatorDot');
+    const toggleWatcherBtn = document.getElementById('toggleWatcherBtn');
+    const restartsCount = document.getElementById('restartsCount');
+    const processPid = document.getElementById('processPid');
+    const targetPlaceId = document.getElementById('targetPlaceId');
+    const logsConsole = document.getElementById('logsConsole');
+    const screenshotImg = document.getElementById('screenshotImg');
+    const screenshotEmpty = document.getElementById('screenshotEmpty');
+    const screenTimestamp = document.getElementById('screenTimestamp');
+    const testTeleportBtn = document.getElementById('testTeleportBtn');
+    const refreshScreenshotBtn = document.getElementById('refreshScreenshotBtn');
+
+    // Header Pulse Indicator Elements
+    const pulseBadge = document.getElementById('pulseBadge');
+    const pulsePing = document.getElementById('pulsePing');
+    const pulseDot = document.getElementById('pulseDot');
+    const pulseLabel = document.getElementById('pulseLabel');
+
+    // Event Icon Debug Elements
+    const eventIconCard = document.getElementById('eventIconCard');
+    const eventIconImg = document.getElementById('eventIconImg');
+    const eventIconEmpty = document.getElementById('eventIconEmpty');
+    const eventIconStatusBadge = document.getElementById('eventIconStatusBadge');
+    const eventIconCoordsLabel = document.getElementById('eventIconCoordsLabel');
+
+    // Settings Modal
+    const settingsModal = document.getElementById('settingsModal');
+    const openSettingsBtn = document.getElementById('openSettingsBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+    const resetStatsBtn = document.getElementById('resetStatsBtn');
+    const settingsForm = document.getElementById('settingsForm');
+
+    function sendNative(msg) {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeApp) {
+        window.webkit.messageHandlers.nativeApp.postMessage(msg);
+      } else {
+        console.log('Native bridge:', msg);
+      }
+    }
+
+    function openExternal(url) {
+      sendNative({ action: 'openExternal', url: url });
+    }
+
+    openSettingsBtn.addEventListener('click', () => {
+      sendNative({ action: 'getConfig' });
+      settingsModal.classList.remove('hidden');
+    });
+    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+    cancelSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+    resetStatsBtn?.addEventListener('click', () => {
+      sendNative({ action: 'resetStats' });
+      restartsCount.innerText = '0';
+      resetStatsBtn.innerText = '✓ Reset!';
+      setTimeout(() => { resetStatsBtn.innerText = 'Reset counter to 0'; }, 2000);
+    });
+
+    toggleWatcherBtn.addEventListener('click', () => {
+      if (isRunning) {
+        sendNative({ action: 'stop' });
+      } else {
+        sendNative({ action: 'start' });
+      }
+    });
+
+    testTeleportBtn.addEventListener('click', () => {
+      testTeleportBtn.disabled = true;
+      testTeleportBtn.innerText = '⚡ Triggering...';
+      sendNative({ action: 'testTeleport' });
+      setTimeout(() => {
+        testTeleportBtn.disabled = false;
+        testTeleportBtn.innerText = '⚡ Test Click';
+      }, 3000);
+    });
+
+    refreshScreenshotBtn.addEventListener('click', () => {
+      sendNative({ action: 'refreshScreenshot' });
+    });
+
+    screenshotImg.addEventListener('click', () => {
+      sendNative({ action: 'refreshScreenshot' });
+    });
+
+    document.getElementById('clearLogsBtn').addEventListener('click', () => {
+      logsConsole.innerHTML = '<div class="text-slate-500">// Console cleared</div>';
+    });
+
+    // Native Callback: Update UI State
+    window.updateUIState = function(data) {
+      isRunning = data.running;
+      if (isRunning) {
+        statusText.innerText = 'RUNNING';
+        statusText.className = 'font-mono text-sm font-bold text-cyan-400';
+        statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse';
+        toggleWatcherBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-white"></span><span>Stop</span>';
+        toggleWatcherBtn.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all shadow-lg bg-rose-500 hover:bg-rose-400 text-white font-mono shadow-rose-500/20';
+
+        // Pulse Icon (Active & Glowing)
+        if (pulsePing) pulsePing.classList.remove('hidden');
+        if (pulseDot) pulseDot.className = 'relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400 shadow-[0_0_8px_#38bdf8]';
+        if (pulseBadge) pulseBadge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-950/40 border border-cyan-800/60 text-cyan-300 text-xs font-mono transition-all';
+        if (pulseLabel) pulseLabel.innerText = 'Active';
+      } else {
+        statusText.innerText = 'STOPPED';
+        statusText.className = 'font-mono text-sm font-bold text-slate-400';
+        statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+        toggleWatcherBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-dark-950"></span><span>Start</span>';
+        toggleWatcherBtn.className = 'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all shadow-lg bg-cyan-500 hover:bg-cyan-400 text-dark-950 font-mono shadow-cyan-500/20';
+
+        // Pulse Icon (Inactive & Dim)
+        if (pulsePing) pulsePing.classList.add('hidden');
+        if (pulseDot) pulseDot.className = 'relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-600';
+        if (pulseBadge) pulseBadge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-950 border border-slate-800 text-slate-500 text-xs font-mono transition-all';
+        if (pulseLabel) pulseLabel.innerText = 'Inactive';
+      }
+
+      restartsCount.innerText = data.restarts ?? 0;
+      processPid.innerText = data.robloxPid ? `PID: ${data.robloxPid}` : 'Not Running';
+      targetPlaceId.innerText = data.placeId ?? '--';
+
+      // Event Icon Debug Card
+      if (data.autoTeleportToEvent) {
+        eventIconCard.classList.remove('hidden');
+        if (data.eventIconBase64) {
+          eventIconImg.src = 'data:image/png;base64,' + data.eventIconBase64;
+          eventIconImg.classList.remove('hidden');
+          eventIconEmpty.classList.add('hidden');
+          eventIconStatusBadge.innerText = 'Tracked';
+          eventIconStatusBadge.className = 'text-xs px-2 py-0.5 rounded bg-cyan-950 border border-cyan-700 text-cyan-300 font-mono font-bold';
+          if (data.eventCoords) {
+            eventIconCoordsLabel.innerText = 'Live coords: (' + data.eventCoords.x + ', ' + data.eventCoords.y + ') • "' + (data.eventMatchedText || '') + '"';
+          }
+        } else {
+          eventIconImg.classList.add('hidden');
+          eventIconEmpty.classList.remove('hidden');
+          eventIconStatusBadge.innerText = 'Scanning UI';
+          eventIconStatusBadge.className = 'text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-medium';
+          eventIconCoordsLabel.innerText = 'Searching left panel for tycoon icon...';
+        }
+      } else {
+        eventIconCard.classList.add('hidden');
+      }
+
+      // Live Logs & AUTO-SCROLL TO BOTTOM
+      if (data.logs && data.logs.length > 0) {
+        logsConsole.innerHTML = data.logs.map(l => {
+          let color = 'text-slate-300';
+          if (l.includes('[ALERT]') || l.includes('Error')) color = 'text-rose-400 font-bold';
+          else if (l.includes('[Success]') || l.includes('[Target]') || l.includes('[Decision]')) color = 'text-cyan-300 font-semibold';
+          else if (l.includes('[Process]')) color = 'text-slate-400';
+          else if (l.includes('[Countdown]')) color = 'text-cyan-500';
+          return `<div class="${color}">${escapeHtml(l)}</div>`;
+        }).join('');
+
+        // Guaranteed auto-scroll to the latest log line
+        logsConsole.scrollTop = logsConsole.scrollHeight;
+      }
+
+      // Live Screenshot Thumbnail
+      if (data.screenshotBase64) {
+        screenshotImg.src = 'data:image/jpeg;base64,' + data.screenshotBase64;
+        screenshotImg.classList.remove('hidden');
+        screenshotEmpty.classList.add('hidden');
+        screenTimestamp.innerText = new Date().toLocaleTimeString();
+      }
+
+      if (data.appVersion) {
+        const vElem = document.getElementById('footerVersion');
+        if (vElem) vElem.innerText = 'v' + data.appVersion;
+      }
+    };
+
+    // Native Callback: Populate Config in Settings modal
+    window.populateConfig = function(cfg) {
+      document.getElementById('cfgInterval').value = cfg.checkIntervalSeconds ?? 5.0;
+      document.getElementById('cfgCooldown').value = cfg.reconnectCooldownSeconds ?? 30.0;
+      document.getElementById('cfgPlaceId').value = cfg.placeId ?? '';
+      document.getElementById('cfgVipUrl').value = cfg.vipServerUrl ?? '';
+      document.getElementById('cfgButtonText').value = cfg.reconnectButtonText ?? 'Reconnect';
+      document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['pumpkin', 'tycoon']).join(', ');
+      document.getElementById('cfgDisconnectKeywords').value = (cfg.disconnectKeywords ?? []).join('\n');
+      document.getElementById('cfgAutoTeleport').checked = cfg.autoTeleportToEvent ?? true;
+      document.getElementById('cfgAutoClick').checked = cfg.autoClickReconnect ?? true;
+      document.getElementById('cfgAutoRelaunch').checked = cfg.autoRelaunchOnKick ?? true;
+    };
+
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const updated = {
+        checkIntervalSeconds: parseFloat(document.getElementById('cfgInterval').value) || 5.0,
+        reconnectCooldownSeconds: parseFloat(document.getElementById('cfgCooldown').value) || 30.0,
+        placeId: document.getElementById('cfgPlaceId').value.trim() || null,
+        vipServerUrl: document.getElementById('cfgVipUrl').value.trim() || null,
+        reconnectButtonText: document.getElementById('cfgButtonText').value.trim() || 'Reconnect',
+        eventTargetKeywords: document.getElementById('cfgEventKeywords').value.split(',').map(s => s.trim()).filter(Boolean),
+        disconnectKeywords: document.getElementById('cfgDisconnectKeywords').value.split('\n').map(s => s.trim()).filter(Boolean),
+        autoTeleportToEvent: document.getElementById('cfgAutoTeleport').checked,
+        autoClickReconnect: document.getElementById('cfgAutoClick').checked,
+        autoRelaunchOnKick: document.getElementById('cfgAutoRelaunch').checked
+      };
+
+      sendNative({ action: 'saveConfig', config: updated });
+      settingsModal.classList.add('hidden');
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+</html>
