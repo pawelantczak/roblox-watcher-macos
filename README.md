@@ -88,7 +88,7 @@ To bump the version and publish a release:
    git tag "v$(cat VERSION)"
    git push origin main --tags
    ```
-3. GitHub Actions (`.github/workflows/build.yml`) automatically builds the `.dmg` on `macos-14`, generates release notes, and attaches the downloadable installer to the GitHub Release.
+3. GitHub Actions (`.github/workflows/build.yml`) automatically builds the `.dmg` on `macos-latest`, generates release notes, and attaches the downloadable installer to the GitHub Release.
 
 ---
 
