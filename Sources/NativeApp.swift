@@ -871,6 +871,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return false // Keeps running in the menu bar
     }
     
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        return true
+    }
+    
     func applicationWillTerminate(_ notification: Notification) {
         WatcherManager.shared.stop()
     }
