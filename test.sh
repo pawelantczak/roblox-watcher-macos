@@ -10,7 +10,7 @@ TEST_EXEC="$BUILD_DIR/watcher-tests"
 
 echo "==> Compiling Roblox Watcher Unit Test Suite..."
 swiftc -O \
-    Sources/Core.swift \
+    Sources/Core/*.swift \
     Tests/WatcherTests.swift \
     -o "$TEST_EXEC"
 

@@ -35,16 +35,16 @@ swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
-    Sources/Core.swift \
-    Sources/main.swift \
+    Sources/Core/*.swift \
+    Sources/CLI/*.swift \
     -o "$DIR/${CLI_NAME}_arm64"
 
 swiftc -O -target x86_64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
-    Sources/Core.swift \
-    Sources/main.swift \
+    Sources/Core/*.swift \
+    Sources/CLI/*.swift \
     -o "$DIR/${CLI_NAME}_x86_64"
 
 lipo -create -output "$DIR/$CLI_NAME" "$DIR/${CLI_NAME}_arm64" "$DIR/${CLI_NAME}_x86_64"
@@ -82,8 +82,8 @@ swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework CoreGraphics \
     -framework ImageIO \
-    Sources/Core.swift \
-    Sources/NativeApp.swift \
+    Sources/Core/*.swift \
+    Sources/App/*.swift \
     -o "$MACOS_DIR/RobloxWatcher_arm64"
 
 swiftc -O -target x86_64-apple-macos14.0 \
@@ -92,8 +92,8 @@ swiftc -O -target x86_64-apple-macos14.0 \
     -framework Vision \
     -framework CoreGraphics \
     -framework ImageIO \
-    Sources/Core.swift \
-    Sources/NativeApp.swift \
+    Sources/Core/*.swift \
+    Sources/App/*.swift \
     -o "$MACOS_DIR/RobloxWatcher_x86_64"
 
 lipo -create -output "$MACOS_DIR/RobloxWatcher" "$MACOS_DIR/RobloxWatcher_arm64" "$MACOS_DIR/RobloxWatcher_x86_64"

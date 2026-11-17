@@ -10,9 +10,21 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
   - `VERSION`: Root plain-text file holding the semver string (e.g. `1.1.0`).
   - Stamped into `Resources/Info.plist`, CLI banner, GUI app footer badge, and build output filenames.
 - **Components**:
-  - `Sources/Core.swift`: Shared business logic, models (`Config`, `Stats`, `DetectedText`, `RobloxWindowInfo`), classification rules (`WatcherClassifier`), and utilities (`WatcherUtils`).
-  - `Sources/main.swift`: Headless CLI daemon (`roblox-watcher-v<version>`, symlinked as `roblox-watcher`).
-  - `Sources/NativeApp.swift`: Native Cocoa GUI application (`Roblox Watcher.app`) embedding a lightweight WebKit dashboard.
+  - `Sources/Core/`: Shared business logic, models, services, and utilities:
+    - `Models.swift`: `Config`, `Stats`, `DetectedText`, and `RobloxWindowInfo`.
+    - `Classifier.swift`: OCR text filtering (`WatcherClassifier`) and `WatcherUtils`.
+    - `WindowService.swift`: Window discovery, placeId parsing, and activation.
+    - `VisionService.swift`: Screen capture and on-device Apple Vision OCR.
+    - `InputService.swift`: Synthetic mouse events, hardware warping, and Anti-AFK engine.
+    - `GameService.swift`: Game relaunching and event area navigation workflows.
+    - `StorageService.swift`: Deterministic JSON persistence and version resolution.
+    - `LockManager.swift`: POSIX advisory kernel lock (`flock`) engine.
+  - `Sources/CLI/main.swift`: Headless CLI daemon (~170 lines) polling loop.
+  - `Sources/App/`: Modular Native Cocoa GUI application:
+    - `AppEntry.swift`: `@main` bootstrap and single-instance validation.
+    - `AppDelegate.swift`: NSWindow lifecycle, menu bar status item, dock reopen handler.
+    - `WatcherEngine.swift`: State coordination, background timers, and telemetry.
+    - `DashboardBridge.swift`: Typed WebKit script message handlers (`DashboardAction`).
   - `Tests/WatcherTests.swift`: Self-contained unit test suite covering OCR text classification, Voice Chat notification filtering, config serialization, placeId parsing, Anti-AFK math, and kernel file locks.
   - `test.sh`: Standalone fast test runner compiling and running the test suite in <5ms.
   - `Resources/index.html`: Responsive dark-mode dashboard UI communicating via native WebKit script message handlers.
@@ -61,3 +73,11 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
      - If there are **only fixes** (`### Fixed`), bump **patch** (`x.y.Z`).
      - If there are any **new features or capabilities** (`### Added`), bump **minor** (`x.Y.0`).
      - If there are **breaking architectural changes**, bump **major** (`X.0.0`).
+5. **MODULAR ARCHITECTURE & FILE BUDGET**:
+   - Keep individual Swift files under 250 lines of code. Split files whenever responsibilities diverge.
+   - All shared domain services, game automation, OCR, window finding, input simulation, and persistence must reside exclusively in `Sources/Core/`. Never duplicate domain logic across `Sources/App/` or `Sources/CLI/`.
+   - Adhere strictly to naming conventions:
+     - Core services: `<Domain>Service.swift` (e.g. `WindowService.swift`, `VisionService.swift`).
+     - Models: `Models.swift`.
+     - UI Controllers: `<Component>Delegate.swift` or `<Component>Bridge.swift`.
+

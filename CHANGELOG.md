@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Modular Architecture & Layered Decomposition**: Refactored monolithic Swift files into modular services with strict <250 LOC limits (`Sources/Core/`, `Sources/CLI/`, and `Sources/App/`), eliminating cross-layer domain duplication.
+- **Typed WebKit Bridge**: Introduced `DashboardAction` typed enum for WebKit script message communication, replacing untyped string dictionary lookups.
 - **Automated Unit Test Suite**: Introduced `test.sh` and `Tests/WatcherTests.swift` executing 52 assertions across 8 test suites in <5ms, covering OCR classification, non-fatal Voice Chat ignore filtering, placeId regex parsing, Anti-AFK calculations, and POSIX kernel locking.
-- **Shared Core Module (`Sources/Core.swift`)**: Extracted shared models (`Config`, `Stats`, `DetectedText`, `RobloxWindowInfo`) and business logic (`WatcherClassifier`, `WatcherUtils`) to eliminate code duplication between CLI and NativeApp.
 - **CI Test Automation**: Added automated test execution to GitHub Actions (`.github/workflows/build.yml`) and `build.sh` prior to binary compilation.
 
 ### Fixed
