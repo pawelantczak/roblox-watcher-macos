@@ -160,7 +160,7 @@
             <span class="text-sm font-bold text-white">Event Icon:</span>
             <span id="eventIconStatusBadge" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-medium">Scanning UI</span>
           </div>
-          <span id="eventIconCoordsLabel" class="text-xs text-slate-300 font-mono mt-0.5">Searching left panel for tycoon icon...</span>
+          <span id="eventIconCoordsLabel" class="text-xs text-slate-300 font-mono mt-0.5">Searching left panel for event icon...</span>
         </div>
       </div>
 
@@ -260,7 +260,7 @@
 
         <div>
           <label class="block text-slate-400 mb-1">Event Target Keywords (comma separated)</label>
-          <input type="text" id="cfgEventKeywords" placeholder="pumpkin, tycoon" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+          <input type="text" id="cfgEventKeywords" placeholder="e.g. event, tycoon, winter" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
         </div>
 
         <div>
@@ -454,7 +454,10 @@
           eventIconEmpty.classList.remove('hidden');
           eventIconStatusBadge.innerText = 'Scanning UI';
           eventIconStatusBadge.className = 'text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-medium';
-          eventIconCoordsLabel.innerText = 'Searching left panel for tycoon icon...';
+          const targetKws = (data.eventKeywords && data.eventKeywords.length > 0)
+            ? `[${data.eventKeywords.join(', ')}]`
+            : 'event';
+          eventIconCoordsLabel.innerText = `Searching left panel for ${targetKws} icon...`;
         }
       } else {
         eventIconCard.classList.add('hidden');
