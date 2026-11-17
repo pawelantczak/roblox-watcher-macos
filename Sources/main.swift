@@ -343,12 +343,7 @@ func teleportToEventArea(screenshotPath: String, targetKeywords: [String], maxWa
         fflush(stdout)
     }
     
-    // Calibrated fallback: if text was not detected within timeout, click calibrated coordinates inside Roblox window
-    let winBounds = findRobloxWindow()?.bounds ?? CGRect(x: 0, y: 25, width: 2560, height: 1339)
-    let fallbackPoint = CGPoint(x: winBounds.origin.x + 74, y: winBounds.origin.y + 800)
-    print("\n\(logTimestamp()) [Event Nav] OCR timeout. Triggering click at calibrated coordinates (\(Int(fallbackPoint.x)), \(Int(fallbackPoint.y)))...")
-    clickScreenAtPoint(point: fallbackPoint, label: "Calibrated Event Icon")
-    print("\(logTimestamp()) [Event Nav] Fallback teleport click completed.\n")
+    print("\n\(logTimestamp()) [Event Nav] Timeout: Event icon [\(keywordsDisplay)] not detected on Roblox window. Skipping click to prevent accidental inputs.\n")
 }
 
 func getAppVersion() -> String {

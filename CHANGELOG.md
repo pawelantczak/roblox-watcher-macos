@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Event Keyword Display**: UI scanning labels now bind dynamically to the configured event keywords (`Searching left panel for [keywords] icon...`).
 
 ### Fixed
-- **Instant Test Click**: Replaced 12-second delayed OCR loop with an immediate one-shot scan and calibrated click fallback (`x: origin.x + 65, y: origin.y + 775`).
+- **Instant Test Click**: Replaced 12-second delayed OCR loop with an immediate one-shot scan; removed hardcoded pixel fallbacks so clicks only dispatch when the target is verified by OCR.
 - **Window Activation Reliability**: Upgraded `activateRoblox()` to use dual-layer activation via AppleScript and `NSRunningApplication.activate`.
 - **Menu Bar Icon Framing**: Removed extra squircle borders and outer rings, leaving only the clean eye graphic with hollow Roblox pupil.
 - **CI Runner Image**: Switched GitHub Actions runner from deprecated `macos-14` tag to `macos-latest`.

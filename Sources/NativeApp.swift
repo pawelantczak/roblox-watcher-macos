@@ -364,11 +364,7 @@ func teleportToEventArea(screenshotPath: String, targetKeywords: [String], maxWa
         logger("[Event Nav] Waiting for event icon [\(keywordsDisplay)] to appear (\(elapsed)/\(maxWaitSeconds)s)...")
     }
     
-    let winBounds = findRobloxWindow()?.bounds ?? CGRect(x: 0, y: 25, width: 2560, height: 1339)
-    let fallbackPoint = CGPoint(x: winBounds.origin.x + 74, y: winBounds.origin.y + 800)
-    logger("\n\(logTimestamp()) [Event Nav] OCR timeout. Triggering click at calibrated coordinates (\(Int(fallbackPoint.x)), \(Int(fallbackPoint.y)))...")
-    clickScreenAtPoint(point: fallbackPoint, label: "Calibrated Event Icon", logger: logger)
-    logger("\(logTimestamp()) [Event Nav] Fallback teleport click completed.\n")
+    logger("\n\(logTimestamp()) [Event Nav] Timeout: Event icon [\(keywordsDisplay)] not detected on Roblox window. Skipping click to prevent accidental inputs.\n")
 }
 
 // MARK: - Watcher Controller
@@ -493,11 +489,9 @@ class WatcherManager {
                 }
             }
             
-            // 5. Fallback: Instant calibrated click on event panel button (x: +65, y: +775)
-            let currentWin = findRobloxWindow() ?? liveWin
-            let fallbackPoint = CGPoint(x: currentWin.bounds.origin.x + 65, y: currentWin.bounds.origin.y + 775)
-            self.appendLog("\(logTimestamp()) [Action] Event text not found via OCR. Dispatching click to calibrated position (\(Int(fallbackPoint.x)), \(Int(fallbackPoint.y)))...")
-            clickScreenAtPoint(point: fallbackPoint, label: "Calibrated Event Icon", logger: { msg in self.appendLog(msg) })
+            // 5. Not found: Log safely and do not click blindly
+            let kwList = self.config.eventTargetKeywords.joined(separator: ", ")
+            self.appendLog("\(logTimestamp()) [Warning] Event icon matching [\(kwList)] not detected on screen. No click dispatched.")
         }
     }
     
