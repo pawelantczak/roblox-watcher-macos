@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Automated Unit Test Suite**: Introduced `test.sh` and `Tests/WatcherTests.swift` executing 52 assertions across 8 test suites in <5ms, covering OCR classification, non-fatal Voice Chat ignore filtering, placeId regex parsing, Anti-AFK calculations, and POSIX kernel locking.
+- **Shared Core Module (`Sources/Core.swift`)**: Extracted shared models (`Config`, `Stats`, `DetectedText`, `RobloxWindowInfo`) and business logic (`WatcherClassifier`, `WatcherUtils`) to eliminate code duplication between CLI and NativeApp.
+- **CI Test Automation**: Added automated test execution to GitHub Actions (`.github/workflows/build.yml`) and `build.sh` prior to binary compilation.
+
 ### Fixed
 - **Event Bar Visibility**: Hide the entire Event Teleport debug bar and "Test Click" action when "Teleport to Event" is disabled in settings, relocating the "Refresh" action directly to the Roblox Window Capture card header so it remains accessible.
 

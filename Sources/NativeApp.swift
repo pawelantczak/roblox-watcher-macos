@@ -47,78 +47,8 @@ func getAppVersion() -> String {
     return "1.0.0"
 }
 
-// MARK: - Configuration & Stats
-struct Config: Codable {
-    var checkIntervalSeconds: Double = 5.0
-    var reconnectCooldownSeconds: Double = 30.0
-    var placeId: String? = "8737899170"
-    var vipServerUrl: String? = nil
-    var autoClickReconnect: Bool = true
-    var autoRelaunchOnKick: Bool = true
-    var autoTeleportToEvent: Bool = true
-    var antiAfkEnabled: Bool = true
-    var antiAfkIntervalSeconds: Double = 300.0 // 5 minutes
-    var reconnectButtonText: String = "Reconnect"
-    var disconnectKeywords: [String] = [
-        "disconnected",
-        "lost connection",
-        "error code: 277",
-        "error code: 279",
-        "error code: 267",
-        "error code: 271",
-        "error code: 268",
-        "error code: 273",
-        "server was shut down",
-        "server has closed",
-        "please reconnect",
-        "connection lost",
-        "connection closed"
-    ]
-    var eventTargetKeywords: [String] = [
-        "pumpkin",
-        "tycoon"
-    ]
-    var ignorePhrases: [String] = [
-        "voice chat",
-        "voice"
-    ]
-    
-    enum CodingKeys: String, CodingKey {
-        case checkIntervalSeconds, reconnectCooldownSeconds, placeId, vipServerUrl
-        case autoClickReconnect, autoRelaunchOnKick, autoTeleportToEvent
-        case antiAfkEnabled, antiAfkIntervalSeconds
-        case reconnectButtonText, disconnectKeywords, eventTargetKeywords, ignorePhrases
-    }
-    
-    init() {}
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        checkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .checkIntervalSeconds) ?? 5.0
-        reconnectCooldownSeconds = try container.decodeIfPresent(Double.self, forKey: .reconnectCooldownSeconds) ?? 30.0
-        placeId = try container.decodeIfPresent(String.self, forKey: .placeId)
-        vipServerUrl = try container.decodeIfPresent(String.self, forKey: .vipServerUrl)
-        autoClickReconnect = try container.decodeIfPresent(Bool.self, forKey: .autoClickReconnect) ?? true
-        autoRelaunchOnKick = try container.decodeIfPresent(Bool.self, forKey: .autoRelaunchOnKick) ?? true
-        autoTeleportToEvent = try container.decodeIfPresent(Bool.self, forKey: .autoTeleportToEvent) ?? true
-        antiAfkEnabled = try container.decodeIfPresent(Bool.self, forKey: .antiAfkEnabled) ?? true
-        antiAfkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .antiAfkIntervalSeconds) ?? 300.0
-        reconnectButtonText = try container.decodeIfPresent(String.self, forKey: .reconnectButtonText) ?? "Reconnect"
-        disconnectKeywords = try container.decodeIfPresent([String].self, forKey: .disconnectKeywords) ?? [
-            "disconnected", "lost connection", "error code: 277", "error code: 279",
-            "error code: 267", "error code: 271", "error code: 268", "error code: 273",
-            "server was shut down", "server has closed", "please reconnect",
-            "connection lost", "connection closed"
-        ]
-        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["pumpkin", "tycoon"]
-        ignorePhrases = try container.decodeIfPresent([String].self, forKey: .ignorePhrases) ?? ["voice chat", "voice"]
-    }
-}
+// MARK: - Configuration & Stats (Core.swift)
 
-struct Stats: Codable {
-    var totalGameRestarts: Int = 0
-    var lastRestartTime: String? = nil
-}
 
 func loadConfig() -> Config {
     let file = getConfigFileURL()
@@ -216,11 +146,7 @@ func activateRoblox() {
 }
 
 // MARK: - Screen OCR & Capture
-struct RobloxWindowInfo {
-    let windowId: CGWindowID
-    let bounds: CGRect
-    let ownerPID: pid_t
-}
+
 
 func findRobloxWindow() -> RobloxWindowInfo? {
     guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
@@ -243,10 +169,6 @@ func findRobloxWindow() -> RobloxWindowInfo? {
     return nil
 }
 
-struct DetectedText {
-    let text: String
-    let boundingBox: CGRect
-}
 
 func captureRobloxWindow(savePath: String) -> (image: CGImage, bounds: CGRect)? {
     let task = Process()
@@ -1086,9 +1008,14 @@ func enforceSingleInstance() {
 }
 
 // MARK: - App Entrypoint
-enforceSingleInstance()
-let app = NSApplication.shared
-app.setActivationPolicy(.regular)
-let delegate = AppDelegate()
-app.delegate = delegate
-app.run()
+@main
+struct AppEntry {
+    static func main() {
+        enforceSingleInstance()
+        let app = NSApplication.shared
+        app.setActivationPolicy(.regular)
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.run()
+    }
+}

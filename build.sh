@@ -17,6 +17,10 @@ echo "=========================================="
 echo "    Building Roblox Watcher Suite v$VERSION"
 echo "=========================================="
 
+# 0. Run Automated Unit Test Suite
+echo "==> [0/3] Running automated unit test suite..."
+"$DIR/test.sh"
+
 # 1. Build CLI Tool (Universal Binary: arm64 + x86_64)
 CLI_NAME="roblox-watcher-v${VERSION}"
 # Detect persistent code signing identity to preserve macOS permissions across rebuilds
@@ -31,6 +35,7 @@ swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
+    Sources/Core.swift \
     Sources/main.swift \
     -o "$DIR/${CLI_NAME}_arm64"
 
@@ -38,6 +43,7 @@ swiftc -O -target x86_64-apple-macos14.0 \
     -framework Vision \
     -framework AppKit \
     -framework CoreGraphics \
+    Sources/Core.swift \
     Sources/main.swift \
     -o "$DIR/${CLI_NAME}_x86_64"
 
@@ -76,6 +82,7 @@ swiftc -O -target arm64-apple-macos14.0 \
     -framework Vision \
     -framework CoreGraphics \
     -framework ImageIO \
+    Sources/Core.swift \
     Sources/NativeApp.swift \
     -o "$MACOS_DIR/RobloxWatcher_arm64"
 
@@ -85,6 +92,7 @@ swiftc -O -target x86_64-apple-macos14.0 \
     -framework Vision \
     -framework CoreGraphics \
     -framework ImageIO \
+    Sources/Core.swift \
     Sources/NativeApp.swift \
     -o "$MACOS_DIR/RobloxWatcher_x86_64"
 

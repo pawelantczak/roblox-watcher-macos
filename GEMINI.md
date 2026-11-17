@@ -10,13 +10,16 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
   - `VERSION`: Root plain-text file holding the semver string (e.g. `1.1.0`).
   - Stamped into `Resources/Info.plist`, CLI banner, GUI app footer badge, and build output filenames.
 - **Components**:
+  - `Sources/Core.swift`: Shared business logic, models (`Config`, `Stats`, `DetectedText`, `RobloxWindowInfo`), classification rules (`WatcherClassifier`), and utilities (`WatcherUtils`).
   - `Sources/main.swift`: Headless CLI daemon (`roblox-watcher-v<version>`, symlinked as `roblox-watcher`).
   - `Sources/NativeApp.swift`: Native Cocoa GUI application (`Roblox Watcher.app`) embedding a lightweight WebKit dashboard.
+  - `Tests/WatcherTests.swift`: Self-contained unit test suite covering OCR text classification, Voice Chat notification filtering, config serialization, placeId parsing, Anti-AFK math, and kernel file locks.
+  - `test.sh`: Standalone fast test runner compiling and running the test suite in <5ms.
   - `Resources/index.html`: Responsive dark-mode dashboard UI communicating via native WebKit script message handlers.
   - `Resources/`: App icons (`app_icon.png`), crisp menu bar indicators (`menubar_active.png`, `menubar_inactive.png`), and `Info.plist`.
-  - `build.sh`: Builds Universal binaries (`arm64` + `x86_64`) targeting macOS 14.0+, automatically applies persistent local code signing (`RobloxWatcherDev`) or ad-hoc signing (`-`), and packages `Roblox-Watcher-v<version>.dmg`.
+  - `build.sh`: Runs `./test.sh`, builds Universal binaries (`arm64` + `x86_64`) targeting macOS 14.0+, automatically applies persistent local code signing (`RobloxWatcherDev`) or ad-hoc signing (`-`), and packages `Roblox-Watcher-v<version>.dmg`.
   - `bump.sh`: Automated semver bumper (`patch`, `minor`, `major`, or custom version) that updates `VERSION` and runs `build.sh`.
-  - `.github/workflows/build.yml`: GitHub Actions pipeline configured for `runs-on: self-hosted`, generating CI artifacts and publishing GitHub releases when `v*` tags are pushed.
+  - `.github/workflows/build.yml`: GitHub Actions pipeline configured for `runs-on: self-hosted`, executing `./test.sh`, generating CI artifacts, and publishing GitHub releases when `v*` tags are pushed.
 
 ---
 

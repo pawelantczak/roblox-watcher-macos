@@ -28,6 +28,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version $VERSION"
 
+      - name: Run Automated Test Suite
+        run: |
+          chmod +x test.sh
+          ./test.sh
+
       - name: Execute Build Script
         run: |
           chmod +x build.sh

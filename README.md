@@ -77,6 +77,16 @@ Run the unified build script:
 
 ---
 
+## Testing
+
+Run the automated unit test suite:
+```bash
+./test.sh
+```
+Executes 52 assertions across 8 test suites validating OCR classification, Voice Chat notification filtering, Anti-AFK countdown calculations, placeId regex parsing, config serialization, and POSIX kernel file locks in <5ms. Automatically runs during `./build.sh` and CI.
+
+---
+
 ## Release Process & Version Bumping
 
 The single source of truth for the project version is the root `VERSION` file.
