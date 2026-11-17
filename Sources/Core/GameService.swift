@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import AppKit
 
 // MARK: - Game Automation Workflows
 
@@ -12,11 +13,19 @@ public struct GameService {
     ) {
         logger?("\(WindowService.logTimestamp()) [Action] Force-closing stale RobloxPlayer...")
         
+        // 1. Force-kill RobloxPlayer
         let killTask = Process()
         killTask.launchPath = "/usr/bin/pkill"
         killTask.arguments = ["-9", "-f", "RobloxPlayer"]
         try? killTask.run()
         killTask.waitUntilExit()
+        
+        // 2. Dismiss any modal macOS CrashReporter dialogs that block focus
+        let killCrashReporter = Process()
+        killCrashReporter.launchPath = "/usr/bin/pkill"
+        killCrashReporter.arguments = ["-9", "-f", "Problem Reporter"]
+        try? killCrashReporter.run()
+        killCrashReporter.waitUntilExit()
         
         sleep(2)
         
@@ -80,5 +89,61 @@ public struct GameService {
         }
         
         logger?("\n\(WindowService.logTimestamp()) [Event Nav] Timeout: Event icon [\(keywordsDisplay)] not detected on Roblox window. Skipping click to prevent accidental inputs.\n")
+    }
+    
+    public static func executeManualEventClick(
+        normalizedCoords: CGPoint?,
+        keywords: [String],
+        logger: ((String) -> Void)? = nil,
+        onFound: ((CGPoint, String) -> Void)? = nil
+    ) {
+        if !AXIsProcessTrusted() {
+            logger?("\(WindowService.logTimestamp()) [ALERT] macOS Accessibility permission is missing for Roblox Watcher!")
+            logger?("\(WindowService.logTimestamp()) [Action] Opening System Settings > Accessibility. Please enable Roblox Watcher.")
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+            _ = AXIsProcessTrustedWithOptions(options)
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
+            return
+        }
+        
+        guard let liveWin = WindowService.findRobloxWindow() else {
+            logger?("\(WindowService.logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.")
+            return
+        }
+        
+        if let norm = normalizedCoords {
+            let liveX = liveWin.bounds.origin.x + (norm.x * liveWin.bounds.width)
+            let liveY = liveWin.bounds.origin.y + (norm.y * liveWin.bounds.height)
+            let pt = CGPoint(x: liveX, y: liveY)
+            logger?("\(WindowService.logTimestamp()) [Action] Dispatching two-click sequence to live icon at (\(Int(liveX)), \(Int(liveY)))...")
+            InputService.clickScreenAtPoint(point: pt, label: "Event Icon Graphic", logger: logger)
+            return
+        }
+        
+        let screenshotPath = StorageService.getScreenshotFileURL().path
+        if let (screenImage, winBounds) = VisionService.captureRobloxWindow(savePath: screenshotPath) {
+            let (detectedItems, _) = VisionService.scanScreenForText(image: screenImage)
+            if let target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: keywords) {
+                let localX = Double(target.boundingBox.midX) * winBounds.width
+                let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
+                let iconCenterY = max(0, localY - 45)
+                
+                let currentWin = WindowService.findRobloxWindow() ?? liveWin
+                let targetX = currentWin.bounds.origin.x + localX
+                let targetY = currentWin.bounds.origin.y + iconCenterY
+                let pt = CGPoint(x: targetX, y: targetY)
+                let norm = CGPoint(x: localX / winBounds.width, y: iconCenterY / winBounds.height)
+                
+                onFound?(norm, target.text)
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking at (\(Int(targetX)), \(Int(targetY)))...")
+                InputService.clickScreenAtPoint(point: pt, label: "Detected Event Icon", logger: logger)
+                return
+            }
+        }
+        
+        let kwList = keywords.joined(separator: ", ")
+        logger?("\(WindowService.logTimestamp()) [Warning] Event icon matching [\(kwList)] not detected on screen. No click dispatched.")
     }
 }

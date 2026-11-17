@@ -136,6 +136,18 @@ The app automatically generates `config.json` on first run if not present:
 
 ---
 
+## Installation & Gatekeeper (First Launch)
+
+1. Download `Roblox-Watcher-v<version>.dmg` from the [Latest Release](https://github.com/pawel-antczak/roblox-watcher/releases/latest).
+2. Open the `.dmg` and drag **Roblox Watcher.app** into `/Applications`.
+3. If macOS blocks launch because the open-source developer cannot be verified, clear the browser quarantine attribute via Terminal:
+   ```bash
+   xattr -cr "/Applications/Roblox Watcher.app"
+   ```
+   *(Alternatively, go to **System Settings > Privacy & Security**, scroll down to the Security section, and click **Open Anyway**)*.
+
+---
+
 ## Permissions
 
 Roblox Watcher requires macOS accessibility and recording permissions to inspect the window and dispatch clicks:

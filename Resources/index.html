@@ -81,6 +81,11 @@
     </div>
 
     <div class="flex items-center gap-3">
+      <!-- Update Available Pill -->
+      <button id="updateAvailableBadge" class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 border border-cyan-500/50 hover:bg-cyan-900/60 text-cyan-300 text-xs font-mono font-bold transition-all animate-pulse">
+        <span>✨ Update <span id="updateVersionLabel">v0.0.0</span></span>
+      </button>
+
       <!-- Status Pulse Indicator (Glows only when watcher is active) -->
       <div id="pulseBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-950 border border-slate-800 text-xs font-mono transition-all">
         <span class="relative flex h-2.5 w-2.5">
@@ -106,6 +111,22 @@
       </button>
     </div>
   </header>
+
+  <!-- Permissions Required Alert Banner (Appears if Screen Recording or Accessibility not granted) -->
+  <div id="permissionsBanner" class="hidden shrink-0 mx-5 mt-2.5 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+      </span>
+      <span class="text-xs font-semibold text-amber-300">Action Required:</span>
+      <span id="permissionsBannerText" class="text-xs text-slate-300 font-mono">macOS Permissions needed for OCR and auto-reconnect</span>
+    </div>
+    <button id="grantPermissionsBtn" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-dark-950 font-bold text-xs transition-colors shadow-sm flex items-center gap-1">
+      <span>Grant Permissions</span>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+    </button>
+  </div>
 
   <!-- Main Content (Fills remaining height, strictly overflow-hidden, no window scroll) -->
   <main class="flex-1 min-h-0 w-full px-5 py-3 flex flex-col gap-3 overflow-hidden">
@@ -366,6 +387,24 @@
     const eventIconStatusBadge = document.getElementById('eventIconStatusBadge');
     const eventIconCoordsLabel = document.getElementById('eventIconCoordsLabel');
 
+    // Permissions & Update Elements
+    const permissionsBanner = document.getElementById('permissionsBanner');
+    const permissionsBannerText = document.getElementById('permissionsBannerText');
+    const grantPermissionsBtn = document.getElementById('grantPermissionsBtn');
+    const updateAvailableBadge = document.getElementById('updateAvailableBadge');
+    const updateVersionLabel = document.getElementById('updateVersionLabel');
+    let activeReleaseUrl = null;
+
+    grantPermissionsBtn?.addEventListener('click', () => {
+      sendNative({ action: 'requestPermissions' });
+    });
+
+    updateAvailableBadge?.addEventListener('click', () => {
+      if (activeReleaseUrl) {
+        openExternal(activeReleaseUrl);
+      }
+    });
+
     // Settings Modal
     const settingsModal = document.getElementById('settingsModal');
     const openSettingsBtn = document.getElementById('openSettingsBtn');
@@ -598,6 +637,28 @@
       if (data.appVersion) {
         const vElem = document.getElementById('footerVersion');
         if (vElem) vElem.innerText = 'v' + data.appVersion;
+      }
+
+      // Permissions Banner Check
+      if (data.screenRecordingGranted === false || data.accessibilityGranted === false) {
+        permissionsBanner?.classList.remove('hidden');
+        const missing = [];
+        if (data.screenRecordingGranted === false) missing.push('Screen Recording');
+        if (data.accessibilityGranted === false) missing.push('Accessibility');
+        if (permissionsBannerText) {
+          permissionsBannerText.innerText = missing.join(' and ') + ' required for OCR detection and Anti-AFK clicks.';
+        }
+      } else {
+        permissionsBanner?.classList.add('hidden');
+      }
+
+      // Update Checker Pill
+      if (data.updateAvailable && data.latestVersion) {
+        activeReleaseUrl = data.releaseUrl;
+        if (updateVersionLabel) updateVersionLabel.innerText = 'v' + data.latestVersion;
+        updateAvailableBadge?.classList.remove('hidden');
+      } else {
+        updateAvailableBadge?.classList.add('hidden');
       }
     };
 

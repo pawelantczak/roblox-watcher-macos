@@ -43,17 +43,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Status Bar
         setupStatusBar()
         
-        // Permissions
-        if !CGPreflightScreenCaptureAccess() {
-            CGRequestScreenCaptureAccess()
-        }
-        
         // App Icon
-        if let iconURL = Bundle.main.url(forResource: "app_icon", withExtension: "png"),
-           let iconImg = NSImage(contentsOf: iconURL) {
-            NSApp.applicationIconImage = iconImg
-        } else if let localIcon = NSImage(contentsOfFile: "Resources/app_icon.png") {
-            NSApp.applicationIconImage = localIcon
+        if let icon = Bundle.main.url(forResource: "app_icon", withExtension: "png").flatMap({ NSImage(contentsOf: $0) }) ?? NSImage(contentsOfFile: "Resources/app_icon.png") {
+            NSApp.applicationIconImage = icon
         }
         
         // Window Styling
@@ -76,7 +68,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         loadHTML()
         
-        // Check accessibility
+        // Check permissions and latest releases
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             if !AXIsProcessTrusted() {
                 let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
@@ -85,6 +77,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if !CGPreflightScreenCaptureAccess() {
                 CGRequestScreenCaptureAccess()
             }
+            UpdateService.shared.checkForUpdates()
         }
         
         // Periodic UI Sync
@@ -127,15 +120,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     public func updateStatusBarIcon(isActive: Bool) {
         let name = isActive ? "menubar_active" : "menubar_inactive"
-        var imgURL = Bundle.main.url(forResource: name, withExtension: "png")
-        if imgURL == nil {
-            let local = URL(fileURLWithPath: "Resources/\(name).png")
-            if FileManager.default.fileExists(atPath: local.path) {
-                imgURL = local
-            }
-        }
-        
-        if let url = imgURL, let image = NSImage(contentsOf: url) {
+        let imgURL = Bundle.main.url(forResource: name, withExtension: "png") ?? URL(fileURLWithPath: "Resources/\(name).png")
+        if let image = NSImage(contentsOf: imgURL) {
             image.size = NSSize(width: 18, height: 18)
             image.isTemplate = false
             statusItem.button?.image = image
@@ -168,20 +154,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     public func loadHTML() {
-        var htmlURL: URL? = nil
-        if let resURL = Bundle.main.url(forResource: "index", withExtension: "html") {
-            htmlURL = resURL
-        } else {
-            let localURL = URL(fileURLWithPath: "Resources/index.html")
-            if FileManager.default.fileExists(atPath: localURL.path) {
-                htmlURL = localURL
-            }
-        }
-        
-        if let url = htmlURL {
-            let baseDir = url.deletingLastPathComponent()
-            webView.loadFileURL(url, allowingReadAccessTo: baseDir.path.hasPrefix("/Users") ? URL(fileURLWithPath: "/") : baseDir)
-        }
+        let url = Bundle.main.url(forResource: "index", withExtension: "html") ?? URL(fileURLWithPath: "Resources/index.html")
+        let baseDir = url.deletingLastPathComponent()
+        webView.loadFileURL(url, allowingReadAccessTo: baseDir.path.hasPrefix("/Users") ? URL(fileURLWithPath: "/") : baseDir)
     }
     
     public func syncUIState() {
@@ -209,6 +184,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             antiAfkSecondsRemaining = max(0, Int(mgr.config.antiAfkIntervalSeconds - elapsed))
         }
         
+        let updater = UpdateService.shared
         let state: [String: Any] = [
             "running": mgr.isRunning,
             "robloxPid": robloxInfo?.pid as Any,
@@ -224,7 +200,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             "eventIconBase64": mgr.latestEventCropBase64 as Any,
             "eventCoords": liveCoords as Any,
             "eventMatchedText": mgr.latestEventMatchedText as Any,
-            "appVersion": StorageService.getAppVersion()
+            "appVersion": StorageService.getAppVersion(),
+            "screenRecordingGranted": CGPreflightScreenCaptureAccess(),
+            "accessibilityGranted": AXIsProcessTrusted(),
+            "updateAvailable": updater.isUpdateAvailable,
+            "latestVersion": updater.latestVersion as Any,
+            "releaseUrl": updater.releaseUrl as Any
         ]
         
         if let jsonData = try? JSONSerialization.data(withJSONObject: state, options: []),

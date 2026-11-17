@@ -17,9 +17,14 @@ public struct VisionService {
             task.arguments = ["-x", "-o", "-l", "\(win.windowId)", savePath]
             windowBounds = win.bounds
         } else {
-            task.arguments = ["-x", "-m", savePath]
-            if let screen = NSScreen.main {
-                windowBounds = screen.frame
+            // Attempt to restore window if Roblox is running but minimized in Dock
+            WindowService.unminimizeRobloxIfNeeded()
+            if let win = WindowService.findRobloxWindow() {
+                task.arguments = ["-x", "-o", "-l", "\(win.windowId)", savePath]
+                windowBounds = win.bounds
+            } else {
+                // Safety: Never capture the user's primary monitor to prevent OCR false-positives
+                return nil
             }
         }
         

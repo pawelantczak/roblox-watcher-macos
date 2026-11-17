@@ -75,61 +75,15 @@ public class WatcherManager {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             self.appendLog("\(WindowService.logTimestamp()) [Action] Manual test teleport triggered...")
-            
-            // 1. Accessibility permission verification
-            if !AXIsProcessTrusted() {
-                self.appendLog("\(WindowService.logTimestamp()) [ALERT] macOS Accessibility permission is missing for Roblox Watcher!")
-                self.appendLog("\(WindowService.logTimestamp()) [Action] Opening System Settings > Accessibility. Please enable Roblox Watcher.")
-                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-                _ = AXIsProcessTrustedWithOptions(options)
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                    NSWorkspace.shared.open(url)
+            GameService.executeManualEventClick(
+                normalizedCoords: self.latestEventNormalizedCoords,
+                keywords: self.config.eventTargetKeywords,
+                logger: { msg in self.appendLog(msg) },
+                onFound: { norm, text in
+                    self.latestEventNormalizedCoords = norm
+                    self.latestEventMatchedText = text
                 }
-                return
-            }
-            
-            // 2. Re-fetch LIVE Roblox window position
-            guard let liveWin = WindowService.findRobloxWindow() else {
-                self.appendLog("\(WindowService.logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.")
-                return
-            }
-            
-            // 3. If event icon coordinates are already tracked, compute live point and click immediately
-            if let norm = self.latestEventNormalizedCoords {
-                let liveX = liveWin.bounds.origin.x + (norm.x * liveWin.bounds.width)
-                let liveY = liveWin.bounds.origin.y + (norm.y * liveWin.bounds.height)
-                let pt = CGPoint(x: liveX, y: liveY)
-                self.appendLog("\(WindowService.logTimestamp()) [Action] Dispatching two-click sequence to live icon at (\(Int(liveX)), \(Int(liveY)))...")
-                InputService.clickScreenAtPoint(point: pt, label: "Event Icon Graphic", logger: { msg in self.appendLog(msg) })
-                return
-            }
-            
-            // 4. Perform an instant one-shot OCR scan on the current screen
-            let screenshotPath = StorageService.getScreenshotFileURL().path
-            if let (screenImage, winBounds) = VisionService.captureRobloxWindow(savePath: screenshotPath) {
-                let (detectedItems, _) = VisionService.scanScreenForText(image: screenImage)
-                if let target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: self.config.eventTargetKeywords) {
-                    let localX = Double(target.boundingBox.midX) * winBounds.width
-                    let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
-                    let iconCenterY = max(0, localY - 45)
-                    
-                    let currentWin = WindowService.findRobloxWindow() ?? liveWin
-                    let targetX = currentWin.bounds.origin.x + localX
-                    let targetY = currentWin.bounds.origin.y + iconCenterY
-                    let pt = CGPoint(x: targetX, y: targetY)
-                    
-                    self.latestEventNormalizedCoords = CGPoint(x: localX / winBounds.width, y: iconCenterY / winBounds.height)
-                    self.latestEventMatchedText = target.text
-                    
-                    self.appendLog("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking at (\(Int(targetX)), \(Int(targetY)))...")
-                    InputService.clickScreenAtPoint(point: pt, label: "Detected Event Icon", logger: { msg in self.appendLog(msg) })
-                    return
-                }
-            }
-            
-            // 5. Not found: Log safely and do not click blindly
-            let kwList = self.config.eventTargetKeywords.joined(separator: ", ")
-            self.appendLog("\(WindowService.logTimestamp()) [Warning] Event icon matching [\(kwList)] not detected on screen. No click dispatched.")
+            )
         }
     }
     

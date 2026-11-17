@@ -81,6 +81,25 @@ public struct WindowService {
         usleep(300_000)
     }
     
+    public static func unminimizeRobloxIfNeeded() {
+        guard findRobloxProcess() != nil else { return }
+        let script = """
+        tell application "System Events"
+            if exists (process "RobloxPlayer") then
+                tell process "RobloxPlayer"
+                    set frontmost to true
+                    try
+                        set value of attribute "AXMinimized" of window 1 to false
+                    end try
+                end tell
+            end if
+        end tell
+        """
+        var error: NSDictionary?
+        NSAppleScript(source: script)?.executeAndReturnError(&error)
+        usleep(150_000)
+    }
+
     public static func checkScreenRecordingPermission(logger: ((String) -> Void)? = nil) -> Bool {
         if CGPreflightScreenCaptureAccess() {
             return true

@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Permissions Wizard & Banner (Gap 2)**: Added reactive dashboard banner that alerts users when macOS Screen Recording or Accessibility permissions are ungranted, providing a one-click "Grant Permissions ↗" action that opens the respective macOS System Settings panes.
+- **GitHub Release & Update Checker (`UpdateService`) (Gap 5)**: Background asynchronous update checker against GitHub Releases API with robust semver parsing, displaying an interactive header pill (`✨ Update vX.Y.Z`) when newer releases are published.
+- **Foreign Mac Gatekeeper Hardening (Gap 1)**: Automated ad-hoc (`-`) code signing detection in `build.sh` for CI/GHA and `--release` flags to prevent "Damaged app" Gatekeeper blocks on foreign Macs, alongside `xattr -cr` onboarding documentation in `README.md`.
+- **Minimized Window Recovery (Gap 4)**: Added `unminimizeRobloxIfNeeded()` in `WindowService.swift` using AppleScript to automatically restore Roblox windows minimized to the Dock.
 - **macOS Display Sleep & Auto-Lock Prevention (`PowerService`)**: Implemented native `IOPMAssertion` (`kIOPMAssertionTypePreventUserIdleDisplaySleep`) that engages automatically when monitoring starts and releases when stopped or terminated, preventing macOS screensaver and auto-lock from blinding Vision OCR.
 - **Thumbnail Compression Caching**: Cached base64 JPEG thumbnail by file modification date in `AppDelegate.swift`, reducing idle CPU consumption and WebKit bridge overhead by ~70%.
 - **Humanized Anti-AFK Jitter**: Added randomized spatial jitter (`±8px`) and interval variance in `InputService.swift` to prevent heuristic detection by Roblox client analytics.
 - **Swift Package Manager Support**: Added standard root `Package.swift` manifest defining `RobloxWatcherCore`, CLI, App, and test targets for native Xcode and SPM workflows.
 - **Modular Architecture & Layered Decomposition**: Refactored monolithic Swift files into modular services with strict <250 LOC limits (`Sources/Core/`, `Sources/CLI/`, and `Sources/App/`), eliminating cross-layer domain duplication.
 - **Typed WebKit Bridge**: Introduced `DashboardAction` typed enum for WebKit script message communication, replacing untyped string dictionary lookups.
-- **Automated Unit Test Suite**: Introduced `test.sh` and `Tests/WatcherTests.swift` executing 52 assertions across 8 test suites in <5ms, covering OCR classification, non-fatal Voice Chat ignore filtering, placeId regex parsing, Anti-AFK calculations, and POSIX kernel locking.
+- **Automated Unit Test Suite**: Introduced `test.sh` and `Tests/WatcherTests.swift` executing 70 assertions across 10 test suites in <10ms, covering OCR classification, non-fatal Voice Chat ignore filtering, placeId regex parsing, Anti-AFK calculations, POSIX kernel locking, display power assertions, and semver comparison.
 - **CI Test Automation**: Added automated test execution to GitHub Actions (`.github/workflows/build.yml`) and `build.sh` prior to binary compilation.
 
 ### Fixed
+- **Desktop Privacy Protection (Gap 4)**: Eliminated fallback to capturing the user's primary display when Roblox is off-screen or hidden, ensuring screen capture never scans the user's personal desktop.
+- **macOS CrashReporter Dismissal (Gap 3)**: Automatically terminates lingering modal `Problem Reporter` dialogs during game force-relaunch to prevent macOS crash dialogs from trapping window focus.
 - **Event Bar Visibility**: Hide the entire Event Teleport debug bar and "Test Click" action when "Teleport to Event" is disabled in settings, relocating the "Refresh" action directly to the Roblox Window Capture card header so it remains accessible.
 
 ---

@@ -1,6 +1,7 @@
 import Foundation
 import WebKit
 import AppKit
+import CoreGraphics
 
 // MARK: - Dashboard Script Actions
 
@@ -13,6 +14,7 @@ public enum DashboardAction: String {
     case getConfig
     case saveConfig
     case resetStats
+    case requestPermissions
 }
 
 // MARK: - WebKit Script Message Bridge
@@ -59,6 +61,20 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
             WatcherManager.shared.stats = Stats(totalGameRestarts: 0, lastRestartTime: nil)
             StorageService.saveStats(WatcherManager.shared.stats)
             WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Stats] Restarts counter reset to 0.")
+        case .requestPermissions:
+            if !AXIsProcessTrusted() {
+                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                _ = AXIsProcessTrustedWithOptions(options)
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            if !CGPreflightScreenCaptureAccess() {
+                CGRequestScreenCaptureAccess()
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
         }
     }
 }

@@ -242,6 +242,19 @@ func testPowerServiceSleepPrevention() {
     assertFalse(power.isHoldingAssertion)
 }
 
+func testUpdateServiceSemverComparison() {
+    print("▶ Running: testUpdateServiceSemverComparison")
+    assertTrue(UpdateService.isNewerVersion(remote: "1.2.0", current: "1.1.0"))
+    assertTrue(UpdateService.isNewerVersion(remote: "v1.2.0", current: "1.1.0"))
+    assertTrue(UpdateService.isNewerVersion(remote: "2.0.0", current: "1.9.9"))
+    assertTrue(UpdateService.isNewerVersion(remote: "1.1.1", current: "1.1.0"))
+    assertFalse(UpdateService.isNewerVersion(remote: "1.1.0", current: "1.1.0"))
+    assertFalse(UpdateService.isNewerVersion(remote: "v1.1.0", current: "1.1.0"))
+    assertFalse(UpdateService.isNewerVersion(remote: "1.0.9", current: "1.1.0"))
+    assertFalse(UpdateService.isNewerVersion(remote: "0.9.0", current: "1.0.0"))
+    assertFalse(UpdateService.isNewerVersion(remote: "invalid", current: "1.0.0"))
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -261,6 +274,7 @@ struct TestRunner {
         testAntiAfkCountdownFormatting()
         testSingleInstanceKernelLock()
         testPowerServiceSleepPrevention()
+        testUpdateServiceSemverComparison()
         
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000.0
         print("==========================================")

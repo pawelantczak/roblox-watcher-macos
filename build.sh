@@ -23,11 +23,16 @@ echo "==> [0/3] Running automated unit test suite..."
 
 # 1. Build CLI Tool (Universal Binary: arm64 + x86_64)
 CLI_NAME="roblox-watcher-v${VERSION}"
-# Detect persistent code signing identity to preserve macOS permissions across rebuilds
+
+# Determine Code Signing Identity:
+# - In CI/GHA or when --release is passed: Use pure ad-hoc (-) so foreign Macs do not fail cert validation.
+# - In local development: Use RobloxWatcherDev to preserve local TCC Accessibility & Screen Recording permissions.
 SIGN_IDENTITY="-"
-if security find-identity -p codesigning 2>/dev/null | grep -q "RobloxWatcherDev"; then
+if [ "$1" = "--release" ] || [ "$1" = "--adhoc" ] || [ "$GITHUB_ACTIONS" = "true" ] || [ "$CI" = "true" ]; then
+    echo "==> [Release Build] Signing with ad-hoc (-) for public distribution..."
+elif security find-identity -p codesigning 2>/dev/null | grep -q "RobloxWatcherDev"; then
     SIGN_IDENTITY="RobloxWatcherDev"
-    echo "==> Found persistent code signing identity: $SIGN_IDENTITY"
+    echo "==> [Local Dev Build] Using persistent identity to preserve macOS permissions: $SIGN_IDENTITY"
 fi
 
 echo "==> [1/3] Compiling CLI binary ($CLI_NAME, Universal)..."
