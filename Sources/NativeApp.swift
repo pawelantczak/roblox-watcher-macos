@@ -168,7 +168,14 @@ func activateRoblox() {
     let script = "tell application \"RobloxPlayer\" to activate"
     var error: NSDictionary?
     NSAppleScript(source: script)?.executeAndReturnError(&error)
-    usleep(250_000)
+    
+    for app in NSWorkspace.shared.runningApplications {
+        if app.bundleIdentifier == "com.roblox.RobloxPlayer" || app.localizedName == "Roblox" {
+            app.activate(options: [.activateAllWindows])
+            break
+        }
+    }
+    usleep(300_000)
 }
 
 // MARK: - Screen OCR & Capture
@@ -431,13 +438,25 @@ class WatcherManager {
             guard let self = self else { return }
             self.appendLog("\(logTimestamp()) [Action] Manual test teleport triggered...")
             
-            // Re-fetch LIVE Roblox window position
+            // 1. Accessibility permission verification
+            if !AXIsProcessTrusted() {
+                self.appendLog("\(logTimestamp()) [ALERT] macOS Accessibility permission is missing for Roblox Watcher!")
+                self.appendLog("\(logTimestamp()) [Action] Opening System Settings > Accessibility. Please enable Roblox Watcher.")
+                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                _ = AXIsProcessTrustedWithOptions(options)
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+                return
+            }
+            
+            // 2. Re-fetch LIVE Roblox window position
             guard let liveWin = findRobloxWindow() else {
                 self.appendLog("\(logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.")
                 return
             }
             
-            // If event icon coordinates are already tracked, compute live point and click
+            // 3. If event icon coordinates are already tracked, compute live point and click immediately
             if let norm = self.latestEventNormalizedCoords {
                 let liveX = liveWin.bounds.origin.x + (norm.x * liveWin.bounds.width)
                 let liveY = liveWin.bounds.origin.y + (norm.y * liveWin.bounds.height)
@@ -447,10 +466,38 @@ class WatcherManager {
                 return
             }
             
+            // 4. Perform an instant one-shot OCR scan on the current screen
             let screenshotPath = getScreenshotFileURL().path
-            teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: self.config.eventTargetKeywords, maxWaitSeconds: 12) { msg in
-                self.appendLog(msg)
+            if let (screenImage, winBounds) = captureRobloxWindow(savePath: screenshotPath) {
+                let (detectedItems, _) = scanScreenForText(image: screenImage)
+                for item in detectedItems {
+                    let lower = item.text.lowercased()
+                    let matches = self.config.eventTargetKeywords.contains { kw in lower.contains(kw.lowercased()) }
+                    if matches && item.boundingBox.origin.x < 0.35 {
+                        let localX = Double(item.boundingBox.midX) * winBounds.width
+                        let localY = (1.0 - Double(item.boundingBox.midY)) * winBounds.height
+                        let iconCenterY = max(0, localY - 45)
+                        
+                        let currentWin = findRobloxWindow() ?? liveWin
+                        let targetX = currentWin.bounds.origin.x + localX
+                        let targetY = currentWin.bounds.origin.y + iconCenterY
+                        let pt = CGPoint(x: targetX, y: targetY)
+                        
+                        self.latestEventNormalizedCoords = CGPoint(x: localX / winBounds.width, y: iconCenterY / winBounds.height)
+                        self.latestEventMatchedText = item.text
+                        
+                        self.appendLog("\(logTimestamp()) [Action] Found \"\(item.text)\" on UI! Clicking at (\(Int(targetX)), \(Int(targetY)))...")
+                        clickScreenAtPoint(point: pt, label: "Detected Event Icon", logger: { msg in self.appendLog(msg) })
+                        return
+                    }
+                }
             }
+            
+            // 5. Fallback: Instant calibrated click on event panel button (x: +65, y: +775)
+            let currentWin = findRobloxWindow() ?? liveWin
+            let fallbackPoint = CGPoint(x: currentWin.bounds.origin.x + 65, y: currentWin.bounds.origin.y + 775)
+            self.appendLog("\(logTimestamp()) [Action] Event text not found via OCR. Dispatching click to calibrated position (\(Int(fallbackPoint.x)), \(Int(fallbackPoint.y)))...")
+            clickScreenAtPoint(point: fallbackPoint, label: "Calibrated Event Icon", logger: { msg in self.appendLog(msg) })
         }
     }
     
@@ -729,6 +776,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // Load index.html
         loadHTML()
+        
+        // Prompt for system permissions if missing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            if !AXIsProcessTrusted() {
+                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                _ = AXIsProcessTrustedWithOptions(options)
+            }
+            if !CGPreflightScreenCaptureAccess() {
+                CGRequestScreenCaptureAccess()
+            }
+        }
         
         // Start Periodic UI sync timer
         updateTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
