@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.1] - 2026-11-17
+## [1.1.0] - 2026-11-17
 
 ### Added
 - **Background Anti-AFK Keep-Alive**: Dispatches background mouse clicks to the center of the Roblox window every 5 minutes via targeted process delivery (`postToPid`), preventing 20-minute AFK disconnects without moving the mouse cursor or stealing application focus.
+- **Anti-AFK Settings Toggle**: Added setting control in the configuration modal to enable/disable background keep-alive clicks.
+
+---
+
+## [1.0.1] - 2026-11-17
+
+### Added
 - **Universal 2 Binaries**: Compiles native code for both Apple Silicon (`arm64`) and Intel (`x86_64`) targeting macOS 14.0+.
 - **Ad-Hoc Code Signing**: Added bundle code signing in `build.sh` to prevent Gatekeeper "version not supported" blocks on downloaded DMGs.
 - **Versioned CLI Release Binaries**: Standalone CLI artifacts are now named `roblox-watcher-v<version>`.
