@@ -25,6 +25,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
 1. **Vision OCR Detection**:
    - Uses Apple's native Vision framework (`VNRecognizeTextRequest`) directly on screen captures of the Roblox window (`screencapture -l <windowId>`).
    - Detects disconnect dialogs, error codes (`277`, `279`, `267`, `271`, `268`, `273`), and server shutdown notices without window focus.
+   - Filters out non-fatal notification toasts (such as "You've disconnected from Voice Chat") using configurable `ignorePhrases`.
 2. **Reconnection & Teleport**:
    - Dispatches synthesized mouse events via dual-layer window activation (`NSAppleScript` + `NSRunningApplication.activate`).
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; never falls back to arbitrary hardcoded pixel coordinates.

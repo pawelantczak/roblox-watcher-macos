@@ -268,6 +268,11 @@
           <textarea id="cfgDisconnectKeywords" rows="3" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs"></textarea>
         </div>
 
+        <div>
+          <label class="block text-slate-400 mb-1">Ignored Phrases (skip non-fatal alerts, comma-separated)</label>
+          <input type="text" id="cfgIgnorePhrases" placeholder="voice chat, voice" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+        </div>
+
         <div class="space-y-1.5 border-t border-slate-800 pt-2.5">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="cfgAntiAfk" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
@@ -505,6 +510,7 @@
       document.getElementById('cfgButtonText').value = cfg.reconnectButtonText ?? 'Reconnect';
       document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['pumpkin', 'tycoon']).join(', ');
       document.getElementById('cfgDisconnectKeywords').value = (cfg.disconnectKeywords ?? []).join('\n');
+      document.getElementById('cfgIgnorePhrases').value = (cfg.ignorePhrases ?? ['voice chat', 'voice']).join(', ');
       document.getElementById('cfgAntiAfk').checked = cfg.antiAfkEnabled ?? true;
       document.getElementById('cfgAutoTeleport').checked = cfg.autoTeleportToEvent ?? true;
       document.getElementById('cfgAutoClick').checked = cfg.autoClickReconnect ?? true;
@@ -521,6 +527,7 @@
         reconnectButtonText: document.getElementById('cfgButtonText').value.trim() || 'Reconnect',
         eventTargetKeywords: document.getElementById('cfgEventKeywords').value.split(',').map(s => s.trim()).filter(Boolean),
         disconnectKeywords: document.getElementById('cfgDisconnectKeywords').value.split('\n').map(s => s.trim()).filter(Boolean),
+        ignorePhrases: document.getElementById('cfgIgnorePhrases').value.split(',').map(s => s.trim()).filter(Boolean),
         autoTeleportToEvent: document.getElementById('cfgAutoTeleport').checked,
         autoClickReconnect: document.getElementById('cfgAutoClick').checked,
         autoRelaunchOnKick: document.getElementById('cfgAutoRelaunch').checked,

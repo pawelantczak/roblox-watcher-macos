@@ -35,12 +35,16 @@ struct Config: Codable {
         "pumpkin",
         "tycoon"
     ]
+    var ignorePhrases: [String] = [
+        "voice chat",
+        "voice"
+    ]
     
     enum CodingKeys: String, CodingKey {
         case checkIntervalSeconds, reconnectCooldownSeconds, placeId, vipServerUrl
         case autoClickReconnect, autoRelaunchOnKick, autoTeleportToEvent
         case antiAfkEnabled, antiAfkIntervalSeconds
-        case reconnectButtonText, disconnectKeywords, eventTargetKeywords
+        case reconnectButtonText, disconnectKeywords, eventTargetKeywords, ignorePhrases
     }
     
     init() {}
@@ -64,6 +68,7 @@ struct Config: Codable {
             "connection lost", "connection closed"
         ]
         eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["pumpkin", "tycoon"]
+        ignorePhrases = try container.decodeIfPresent([String].self, forKey: .ignorePhrases) ?? ["voice chat", "voice"]
     }
 }
 
@@ -504,6 +509,11 @@ func main() {
                     for item in detectedItems {
                         let trimmed = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
                         let lower = trimmed.lowercased()
+                        
+                        // Ignore non-fatal notification toasts (e.g. "You've disconnected from Voice Chat")
+                        if config.ignorePhrases.contains(where: { lower.contains($0.lowercased()) }) {
+                            continue
+                        }
                         
                         // Match button explicitly from config
                         if trimmed.caseInsensitiveCompare(targetButton) == .orderedSame || lower == targetButton.lowercased() {
