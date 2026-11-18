@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Native ZIP Distribution (Chrome Safe Browsing Fix)**: Replaced DMG packaging with native ZIP archives created via `ditto -c -k --sequesterRsrc --keepParent`, preserving Mach-O permissions and code signatures while eliminating Google Chrome browser false-positive download warnings.
+- **Changelog-to-Release Notes Automation**: Added automated parsing in `.github/workflows/build.yml` to extract version-specific release notes directly from `CHANGELOG.md` into GitHub Releases with hybrid fallback and commit log appendix, supported by automatic header stamping in `bump.sh`.
 - **Permissions Wizard & Banner (Gap 2)**: Added reactive dashboard banner that alerts users when macOS Screen Recording or Accessibility permissions are ungranted, providing a one-click "Grant Permissions ↗" action that opens the respective macOS System Settings panes.
 - **GitHub Release & Update Checker (`UpdateService`) (Gap 5)**: Background asynchronous update checker against GitHub Releases API with robust semver parsing, displaying an interactive header pill (`✨ Update vX.Y.Z`) when newer releases are published.
 - **Foreign Mac Gatekeeper Hardening (Gap 1)**: Automated ad-hoc (`-`) code signing detection in `build.sh` for CI/GHA and `--release` flags to prevent "Damaged app" Gatekeeper blocks on foreign Macs, alongside `xattr -cr` onboarding documentation in `README.md`.

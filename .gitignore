@@ -2,6 +2,7 @@
 roblox-watcher*
 *.app
 *.dmg
+*.zip
 .build/
 test_ui
 

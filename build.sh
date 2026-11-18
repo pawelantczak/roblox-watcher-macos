@@ -109,33 +109,17 @@ chmod +x "$MACOS_DIR/RobloxWatcher"
 echo "==> Signing app bundle with identity: $SIGN_IDENTITY..."
 codesign --force --deep --sign "$SIGN_IDENTITY" "$DIR/$APP_NAME"
 
-# 3. Create DMG Installer
-DMG_NAME="Roblox-Watcher-v${VERSION}.dmg"
-echo "==> [3/3] Packaging disk image ($DMG_NAME)..."
-STAGING_DIR="$DIR/.build/dmg_staging"
-
-rm -rf "$STAGING_DIR" "$DIR/$DMG_NAME" "$DIR/Roblox Watcher.dmg"
-mkdir -p "$STAGING_DIR"
-
-# Copy App and link Applications folder
-cp -R "$DIR/$APP_NAME" "$STAGING_DIR/"
-ln -s /Applications "$STAGING_DIR/Applications"
-
-# Create compressed read-only DMG with drag-and-drop support
-hdiutil create \
-    -volname "Roblox Watcher" \
-    -srcfolder "$STAGING_DIR" \
-    -ov \
-    -format UDZO \
-    "$DIR/$DMG_NAME" > /dev/null
-
-ln -sf "$DIR/$DMG_NAME" "$DIR/Roblox Watcher.dmg"
-rm -rf "$DIR/.build"
+# 3. Create Distribution ZIP Archive (Avoids Chrome Safe Browsing DMG blocks)
+ZIP_NAME="Roblox-Watcher-v${VERSION}.zip"
+echo "==> [3/3] Packaging native ZIP archive ($ZIP_NAME)..."
+rm -f "$DIR/$ZIP_NAME" "$DIR/Roblox Watcher.zip"
+ditto -c -k --sequesterRsrc --keepParent "$DIR/$APP_NAME" "$DIR/$ZIP_NAME"
+ln -sf "$DIR/$ZIP_NAME" "$DIR/Roblox Watcher.zip"
 
 echo "=========================================="
 echo " Build Success!"
 echo " - Version:    $VERSION (Universal: arm64 + x86_64)"
 echo " - CLI Tool:   $DIR/$CLI_NAME (linked as roblox-watcher)"
 echo " - macOS App:  $DIR/$APP_NAME"
-echo " - DMG Image:  $DIR/$DMG_NAME"
+echo " - ZIP Archive: $DIR/$ZIP_NAME"
 echo "=========================================="

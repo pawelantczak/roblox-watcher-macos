@@ -73,7 +73,7 @@ Run the unified build script:
 `./build.sh` produces three targets:
 - `roblox-watcher-v<version>`: Standalone Universal CLI binary (symlinked as `roblox-watcher`).
 - `Roblox Watcher.app`: Native macOS application bundle.
-- `Roblox-Watcher-v<version>.dmg`: Distributable disk image with `/Applications` drag-and-drop installer.
+- `Roblox-Watcher-v<version>.zip`: Distributable native ZIP archive for 1-click extraction (bypasses Chrome Safe Browsing DMG blocks).
 
 ---
 
@@ -83,7 +83,7 @@ Run the automated unit test suite:
 ```bash
 ./test.sh
 ```
-Executes 52 assertions across 8 test suites validating OCR classification, Voice Chat notification filtering, Anti-AFK countdown calculations, placeId regex parsing, config serialization, and POSIX kernel file locks in <5ms. Automatically runs during `./build.sh` and CI.
+Executes 70 assertions across 10 test suites validating OCR classification, Voice Chat notification filtering, Anti-AFK countdown calculations, placeId regex parsing, config serialization, display sleep power assertions, and POSIX kernel file locks in <10ms. Automatically runs during `./build.sh` and CI.
 
 ---
 
@@ -102,7 +102,7 @@ To bump the version and publish a release:
    git tag "v$(cat VERSION)"
    git push origin main --tags
    ```
-3. GitHub Actions (`.github/workflows/build.yml`) automatically builds the `.dmg` on `macos-latest`, generates release notes, and attaches the downloadable installer to the GitHub Release.
+3. GitHub Actions (`.github/workflows/build.yml`) automatically builds the Universal binaries, packages `Roblox-Watcher-v<version>.zip`, extracts curated release notes from `CHANGELOG.md`, and attaches the downloadable assets to the GitHub Release.
 
 ---
 
@@ -138,8 +138,8 @@ The app automatically generates `config.json` on first run if not present:
 
 ## Installation & Gatekeeper (First Launch)
 
-1. Download `Roblox-Watcher-v<version>.dmg` from the [Latest Release](https://github.com/pawel-antczak/roblox-watcher/releases/latest).
-2. Open the `.dmg` and drag **Roblox Watcher.app** into `/Applications`.
+1. Download `Roblox-Watcher-v<version>.zip` from the [Latest Release](https://github.com/pawel-antczak/roblox-watcher/releases/latest).
+2. Double-click to extract **Roblox Watcher.app** and move it into `/Applications`.
 3. If macOS blocks launch because the open-source developer cannot be verified, clear the browser quarantine attribute via Terminal:
    ```bash
    xattr -cr "/Applications/Roblox Watcher.app"
