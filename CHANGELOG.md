@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
 - **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
 
+### Fixed
+- **Stale Event Target Coordinate Caching**: Cleared cached event target coordinates and thumbnail base64 representation when event text is not detected (e.g. while already inside an event area).
+- **Mandatory Live OCR Verification for Event Teleport**: Removed blind execution on unverified cached normalized coordinates in `executeManualEventClick`; now requires active live window capture and OCR text verification before dispatching clicks, preventing misclicks onto unrelated sidebar icons (e.g. pointing hand or circled arrows) after window resizing.
+
 ---
 
 ## [1.2.0] - 2026-11-18

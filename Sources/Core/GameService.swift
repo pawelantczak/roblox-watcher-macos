@@ -95,7 +95,6 @@ public struct GameService {
     }
     
     public static func executeManualEventClick(
-        normalizedCoords: CGPoint?,
         keywords: [String],
         logger: ((String) -> Void)? = nil,
         onFound: ((CGPoint, String) -> Void)? = nil
@@ -113,15 +112,6 @@ public struct GameService {
         
         guard let liveWin = WindowService.findRobloxWindow() else {
             logger?("\(WindowService.logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.")
-            return
-        }
-        
-        if let norm = normalizedCoords {
-            let liveX = liveWin.bounds.origin.x + (norm.x * liveWin.bounds.width)
-            let liveY = liveWin.bounds.origin.y + (norm.y * liveWin.bounds.height)
-            let pt = CGPoint(x: liveX, y: liveY)
-            logger?("\(WindowService.logTimestamp()) [Action] Dispatching two-click sequence to live icon at (\(Int(liveX)), \(Int(liveY)))...")
-            InputService.clickScreenAtPoint(point: pt, label: "Event Icon Graphic", logger: logger)
             return
         }
         

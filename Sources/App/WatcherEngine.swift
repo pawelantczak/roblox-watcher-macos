@@ -62,9 +62,7 @@ public class WatcherManager {
         PowerService.shared.enableSleepPrevention(reason: "Roblox Watcher Monitoring & Keep-Alive")
         appendLog("\(WindowService.logTimestamp()) [Power] Display sleep & auto-lock prevention active.")
         
-        workerThread = Thread { [weak self] in
-            self?.runLoop()
-        }
+        workerThread = Thread { [weak self] in self?.runLoop() }
         workerThread?.start()
     }
     
@@ -82,7 +80,6 @@ public class WatcherManager {
             guard let self = self else { return }
             self.appendLog("\(WindowService.logTimestamp()) [Action] Manual test teleport triggered...")
             GameService.executeManualEventClick(
-                normalizedCoords: self.latestEventNormalizedCoords,
                 keywords: self.config.eventTargetKeywords,
                 logger: { self.appendLog($0) },
                 onFound: { self.latestEventNormalizedCoords = $0; self.latestEventMatchedText = $1 }
@@ -148,6 +145,8 @@ public class WatcherManager {
                                         self.latestEventMatchedText = target.text
                                     }
                                 }
+                            } else {
+                                (self.latestEventCropBase64, self.latestEventNormalizedCoords, self.latestEventMatchedText) = (nil, nil, nil)
                             }
                         }
                         
