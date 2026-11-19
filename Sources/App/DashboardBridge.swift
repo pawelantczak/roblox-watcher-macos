@@ -99,9 +99,11 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
             let val = (body["minutes"] as? Double) ?? (body["minutes"] as? Int).map(Double.init)
             if let minutes = val, minutes >= 1.0, minutes <= 19.0 {
                 let seconds = minutes * 60.0
-                WatcherManager.shared.config.antiAfkIntervalSeconds = seconds
-                StorageService.saveConfig(WatcherManager.shared.config)
-                WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Anti-AFK Config] Interval set to \(Int(minutes))m (\(Int(seconds))s).")
+                if WatcherManager.shared.config.antiAfkIntervalSeconds != seconds {
+                    WatcherManager.shared.config.antiAfkIntervalSeconds = seconds
+                    StorageService.saveConfig(WatcherManager.shared.config)
+                    WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Anti-AFK Config] Interval set to \(Int(minutes))m (\(Int(seconds))s).")
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Anti-AFK Arrow Stepper & Card Layout**: Added dedicated up/down arrow buttons (`▲`/`▼`) applying changes immediately on click, relocated the stepper to the metric row, and gave "Anti-AFK Keep-Alive" full card width to prevent title truncation.
 - **Configurable Anti-AFK Interval**: Changed default trigger delay from 5 minutes to 10 minutes (600s) and embedded an interactive interval manipulation pill directly within the Anti-AFK dashboard card.
 - **Immediate Anti-AFK Live Application**: User modifications are applied immediately in memory and persisted to disk without requiring a save button or stopping/restarting the watcher.
 - **Blueish Activity Log Styling**: Highlighted Anti-AFK interval changes in bright sky-blue (`text-sky-400 font-bold`) within the live log stream.
