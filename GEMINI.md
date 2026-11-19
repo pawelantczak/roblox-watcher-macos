@@ -99,4 +99,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
      - Core services: `<Domain>Service.swift` (e.g. `WindowService.swift`, `VisionService.swift`).
      - Models: `Models.swift`.
      - UI Controllers: `<Component>Delegate.swift` or `<Component>Bridge.swift`.
+6. **NO AUTOMATIC COMMITS**:
+   - Do **NOT** run `git commit` automatically.
+   - Always propose a copyable `git commit` command with a descriptive commit message considering all uncommitted changes for the user to review and run.
 
