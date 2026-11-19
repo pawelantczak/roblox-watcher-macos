@@ -12,7 +12,7 @@ public struct Config: Codable, Equatable {
     public var autoRelaunchOnKick: Bool = true
     public var autoTeleportToEvent: Bool = true
     public var antiAfkEnabled: Bool = true
-    public var antiAfkIntervalSeconds: Double = 300.0 // 5 minutes
+    public var antiAfkIntervalSeconds: Double = 600.0 // 10 minutes
     public var reconnectButtonText: String = "Reconnect"
     public var disconnectKeywords: [String] = [
         "disconnected",
@@ -57,7 +57,7 @@ public struct Config: Codable, Equatable {
         autoRelaunchOnKick = try container.decodeIfPresent(Bool.self, forKey: .autoRelaunchOnKick) ?? true
         autoTeleportToEvent = try container.decodeIfPresent(Bool.self, forKey: .autoTeleportToEvent) ?? true
         antiAfkEnabled = try container.decodeIfPresent(Bool.self, forKey: .antiAfkEnabled) ?? true
-        antiAfkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .antiAfkIntervalSeconds) ?? 300.0
+        antiAfkIntervalSeconds = try container.decodeIfPresent(Double.self, forKey: .antiAfkIntervalSeconds) ?? 600.0
         reconnectButtonText = try container.decodeIfPresent(String.self, forKey: .reconnectButtonText) ?? "Reconnect"
         disconnectKeywords = try container.decodeIfPresent([String].self, forKey: .disconnectKeywords) ?? [
             "disconnected", "lost connection", "error code: 277", "error code: 279",

@@ -41,7 +41,7 @@ func testConfigDefaultsAndSerialization() {
     assertTrue(cfg.autoRelaunchOnKick)
     assertTrue(cfg.autoTeleportToEvent)
     assertTrue(cfg.antiAfkEnabled)
-    assertEqual(cfg.antiAfkIntervalSeconds, 300.0)
+    assertEqual(cfg.antiAfkIntervalSeconds, 600.0)
     assertTrue(cfg.ignorePhrases.contains("voice chat"))
     assertTrue(cfg.ignorePhrases.contains("voice"))
     
@@ -60,7 +60,7 @@ func testConfigDefaultsAndSerialization() {
     }
     assertEqual(decoded.checkIntervalSeconds, 10.0)
     assertEqual(decoded.placeId, "12345")
-    assertEqual(decoded.antiAfkIntervalSeconds, 300.0) // Uses default
+    assertEqual(decoded.antiAfkIntervalSeconds, 600.0) // Uses default
     assertTrue(decoded.autoTeleportToEvent) // Uses default
     assertTrue(decoded.ignorePhrases.contains("voice"))
 }

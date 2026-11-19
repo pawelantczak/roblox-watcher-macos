@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Configurable Anti-AFK Interval**: Changed default trigger delay from 5 minutes to 10 minutes (600s) and embedded an interactive interval manipulation pill directly within the Anti-AFK dashboard card.
+- **Immediate Anti-AFK Live Application**: User modifications are applied immediately in memory and persisted to disk without requiring a save button or stopping/restarting the watcher.
+- **Blueish Activity Log Styling**: Highlighted Anti-AFK interval changes in bright sky-blue (`text-sky-400 font-bold`) within the live log stream.
 - **In-Memory Log Clearing**: Hooked the "🗑 Clear" action button to `WatcherManager.shared.clearLogs()` via native WebKit bridge so clicking Clear empties the in-memory RAM buffer rather than repopulating on the next polling cycle.
 - **Activity Stream Action Icons**: Standardized icons across all log console header controls ("🗑 Clear", "💾 Download", "⬇ Resume live").
 - **Build Artifact Cleanup (`build.sh`)**: Added automatic pre-build cleanup of previously generated CLI binaries, DMG/ZIP archives, and app bundles, plus a standalone `./build.sh clean` command.

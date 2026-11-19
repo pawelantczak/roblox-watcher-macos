@@ -196,6 +196,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             "autoTeleportToEvent": mgr.config.autoTeleportToEvent,
             "antiAfkEnabled": mgr.config.antiAfkEnabled,
             "antiAfkCountdown": antiAfkSecondsRemaining,
+            "antiAfkIntervalMinutes": Int(round(mgr.config.antiAfkIntervalSeconds / 60.0)),
             "eventKeywords": mgr.config.eventTargetKeywords,
             "eventIconBase64": mgr.latestEventCropBase64 as Any,
             "eventCoords": liveCoords as Any,

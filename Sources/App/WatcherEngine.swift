@@ -219,8 +219,8 @@ public class WatcherManager {
                                 appendLog("\(logTime()) [Check] Game healthy. No disconnect dialog present.")
                             }
                             
-                            // Anti-AFK Keep-Alive Click (every 5 minutes in background)
-                            if config.antiAfkEnabled && now.timeIntervalSince(self.lastAntiAfkClickTimestamp) >= config.antiAfkIntervalSeconds {
+                            // Anti-AFK Keep-Alive Click (background focus-click)
+                            if self.config.antiAfkEnabled && now.timeIntervalSince(self.lastAntiAfkClickTimestamp) >= self.config.antiAfkIntervalSeconds {
                                 self.lastAntiAfkClickTimestamp = now
                                 let liveWin = WindowService.findRobloxWindow()
                                 let currentBounds = liveWin?.bounds ?? winBounds
