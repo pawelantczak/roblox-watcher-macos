@@ -13,6 +13,23 @@ fi
 plutil -replace CFBundleShortVersionString -string "$VERSION" "$DIR/Resources/Info.plist"
 plutil -replace CFBundleVersion -string "$VERSION" "$DIR/Resources/Info.plist"
 
+clean_artifacts() {
+    echo "==> Cleaning previous build artifacts..."
+    rm -rf "$DIR/Roblox Watcher.app"
+    rm -f "$DIR"/roblox-watcher "$DIR"/roblox-watcher-v* "$DIR"/*_arm64 "$DIR"/*_x86_64
+    rm -f "$DIR"/Roblox-Watcher-*.zip "$DIR"/Roblox\ Watcher*.zip
+    rm -f "$DIR"/Roblox-Watcher-*.dmg "$DIR"/Roblox\ Watcher*.dmg
+}
+
+if [ "$1" = "clean" ] || [ "$1" = "--clean" ]; then
+    clean_artifacts
+    echo "==> Clean complete."
+    exit 0
+fi
+
+# Clean previous build artifacts before building
+clean_artifacts
+
 echo "=========================================="
 echo "    Building Roblox Watcher Suite v$VERSION"
 echo "=========================================="

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Build Artifact Cleanup (`build.sh`)**: Added automatic pre-build cleanup of previously generated CLI binaries, DMG/ZIP archives, and app bundles, plus a standalone `./build.sh clean` command.
 - **Persistent File Logging (`StorageService`)**: Added thread-safe asynchronous file logging writing all telemetry and watcher events directly to `~/Library/Application Support/RobloxWatcher/watcher.log`.
 - **Extended UI Log Buffer**: Increased live stream buffer in `WatcherEngine` and WebKit bridge from 50 to 200 log entries for improved diagnostic visibility.
 - **Log Export Button**: Added a "💾 Save" button in the Live Activity Stream dashboard header triggering native macOS `NSSavePanel` file export.
