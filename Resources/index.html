@@ -144,17 +144,17 @@
       <div class="bg-dark-850/70 border border-slate-800/90 rounded-xl px-4 py-2 flex flex-col justify-between">
         <span class="text-xs text-slate-400 font-semibold tracking-wide">Anti-AFK Keep-Alive</span>
         <div class="flex items-center justify-between gap-1">
-          <div class="flex items-baseline gap-1.5 min-w-0">
-            <span id="antiAfkState" class="font-mono text-sm font-bold text-slate-500">DISABLED</span>
-            <span id="antiAfkCountdown" class="font-mono text-xs text-slate-400 font-semibold truncate">--</span>
+          <div class="flex flex-col justify-center min-w-0">
+            <span id="antiAfkState" class="font-mono text-xs font-bold text-slate-500 leading-tight">DISABLED</span>
+            <span id="antiAfkCountdown" class="font-mono text-[11px] text-slate-400 font-medium leading-tight whitespace-nowrap">--</span>
           </div>
-          <div class="flex items-center bg-dark-950/90 border border-slate-700/80 rounded px-1.5 py-0.5 shrink-0 focus-within:border-cyan-400 transition-colors" title="Keep-alive delay in minutes">
+          <div class="flex items-center bg-dark-950/90 border border-slate-700/80 rounded px-1.5 py-1 shrink-0 focus-within:border-cyan-400 transition-colors" title="Keep-alive delay in minutes">
             <input id="antiAfkMinutesInput" type="number" min="1" max="19" step="1" value="10"
               class="w-5 text-center text-xs font-mono font-bold bg-transparent text-cyan-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-            <span class="text-[10px] text-slate-400 font-mono font-medium mr-1">m</span>
-            <div class="flex flex-col -my-0.5">
-              <button id="antiAfkUpBtn" type="button" class="text-[8px] leading-[7px] text-slate-400 hover:text-cyan-300 active:text-cyan-200 px-0.5 py-0.5 hover:bg-slate-800 rounded-sm select-none" title="Increase delay">▲</button>
-              <button id="antiAfkDownBtn" type="button" class="text-[8px] leading-[7px] text-slate-400 hover:text-cyan-300 active:text-cyan-200 px-0.5 py-0.5 hover:bg-slate-800 rounded-sm select-none" title="Decrease delay">▼</button>
+            <span class="text-[10px] text-slate-400 font-mono font-medium mr-1.5">m</span>
+            <div class="flex flex-col gap-0.5">
+              <button id="antiAfkUpBtn" type="button" class="text-[8px] leading-[7px] text-slate-400 hover:text-cyan-300 active:text-cyan-200 px-0.5 hover:bg-slate-800 rounded-sm select-none" title="Increase delay">▲</button>
+              <button id="antiAfkDownBtn" type="button" class="text-[8px] leading-[7px] text-slate-400 hover:text-cyan-300 active:text-cyan-200 px-0.5 hover:bg-slate-800 rounded-sm select-none" title="Decrease delay">▼</button>
             </div>
           </div>
         </div>
@@ -606,26 +606,26 @@
       if (afkState && afkCountdown) {
         if (!data.antiAfkEnabled) {
           afkState.innerText = 'DISABLED';
-          afkState.className = 'font-mono text-sm font-bold text-slate-500';
+          afkState.className = 'font-mono text-xs font-bold text-slate-500 leading-tight';
           afkCountdown.innerText = 'OFF';
-          afkCountdown.className = 'font-mono text-xs text-slate-600 font-semibold';
+          afkCountdown.className = 'font-mono text-[11px] text-slate-600 font-medium leading-tight whitespace-nowrap';
         } else if (!isRunning) {
           afkState.innerText = 'PAUSED';
-          afkState.className = 'font-mono text-sm font-bold text-slate-400';
+          afkState.className = 'font-mono text-xs font-bold text-slate-400 leading-tight';
           afkCountdown.innerText = 'Standby';
-          afkCountdown.className = 'font-mono text-xs text-slate-500 font-semibold';
+          afkCountdown.className = 'font-mono text-[11px] text-slate-500 font-medium leading-tight whitespace-nowrap';
         } else {
           afkState.innerText = 'ENABLED';
-          afkState.className = 'font-mono text-sm font-bold text-cyan-400';
+          afkState.className = 'font-mono text-xs font-bold text-cyan-400 leading-tight';
           const remaining = data.antiAfkCountdown ?? 0;
           if (remaining > 0) {
             const m = Math.floor(remaining / 60);
             const s = remaining % 60;
             afkCountdown.innerText = m > 0 ? `in ${m}m ${s < 10 ? '0' : ''}${s}s` : `in ${s}s`;
-            afkCountdown.className = 'font-mono text-xs text-cyan-400 font-semibold';
+            afkCountdown.className = 'font-mono text-[11px] text-cyan-300 font-medium leading-tight whitespace-nowrap';
           } else {
             afkCountdown.innerText = 'Clicking...';
-            afkCountdown.className = 'font-mono text-xs text-emerald-400 font-semibold animate-pulse';
+            afkCountdown.className = 'font-mono text-[11px] text-emerald-400 font-bold leading-tight animate-pulse whitespace-nowrap';
           }
         }
       }
