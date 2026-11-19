@@ -66,18 +66,21 @@ public struct GameService {
                 guard let (screenImage, winBounds) = VisionService.captureRobloxWindow(savePath: screenshotPath) else { return }
                 let (detectedItems, _) = VisionService.scanScreenForText(image: screenImage)
                 
-                if let target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: targetKeywords) {
+                var target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: targetKeywords)
+                if target == nil {
+                    let sidebarItems = VisionService.scanLeftSidebarForText(image: screenImage)
+                    target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: targetKeywords)
+                }
+                
+                if let target = target {
                     let liveWin = WindowService.findRobloxWindow()
                     let currentBounds = liveWin?.bounds ?? winBounds
-                    let localX = Double(target.boundingBox.midX) * currentBounds.width
-                    let localY = (1.0 - Double(target.boundingBox.midY)) * currentBounds.height
+                    let targetX = currentBounds.origin.x + Double(target.boundingBox.midX) * currentBounds.width
+                    let targetY = currentBounds.origin.y + (1.0 - Double(target.boundingBox.midY)) * currentBounds.height
+                    let targetPoint = CGPoint(x: targetX, y: targetY)
                     
-                    let textX = currentBounds.origin.x + localX
-                    let textY = currentBounds.origin.y + localY
-                    let iconPoint = CGPoint(x: textX, y: max(currentBounds.origin.y, textY - 45))
-                    
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks...")
-                    InputService.clickScreenAtPoint(point: iconPoint, label: "Event Icon Graphic", logger: logger)
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to text center at (\(Int(targetX)), \(Int(targetY)))...")
+                    InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text", logger: logger)
                     logger?("\(WindowService.logTimestamp()) [Event Nav] Teleport dispatched successfully!\n")
                     foundAndClicked = true
                 }
@@ -125,20 +128,25 @@ public struct GameService {
         let screenshotPath = StorageService.getScreenshotFileURL().path
         if let (screenImage, winBounds) = VisionService.captureRobloxWindow(savePath: screenshotPath) {
             let (detectedItems, _) = VisionService.scanScreenForText(image: screenImage)
-            if let target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: keywords) {
+            var target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: keywords)
+            if target == nil {
+                let sidebarItems = VisionService.scanLeftSidebarForText(image: screenImage)
+                target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: keywords)
+            }
+            
+            if let target = target {
                 let localX = Double(target.boundingBox.midX) * winBounds.width
                 let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
-                let iconCenterY = max(0, localY - 45)
                 
                 let currentWin = WindowService.findRobloxWindow() ?? liveWin
                 let targetX = currentWin.bounds.origin.x + localX
-                let targetY = currentWin.bounds.origin.y + iconCenterY
+                let targetY = currentWin.bounds.origin.y + localY
                 let pt = CGPoint(x: targetX, y: targetY)
-                let norm = CGPoint(x: localX / winBounds.width, y: iconCenterY / winBounds.height)
+                let norm = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
                 
                 onFound?(norm, target.text)
-                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking at (\(Int(targetX)), \(Int(targetY)))...")
-                InputService.clickScreenAtPoint(point: pt, label: "Detected Event Icon", logger: logger)
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking text center at (\(Int(targetX)), \(Int(targetY)))...")
+                InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text", logger: logger)
                 return
             }
         }

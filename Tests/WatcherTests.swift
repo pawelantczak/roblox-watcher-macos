@@ -148,7 +148,7 @@ func testEventTargetDetectionBoundingBox() {
     print("▶ Running: testEventTargetDetectionBoundingBox")
     let cfg = Config()
     
-    // Event icons must be on the left panel (origin.x < 0.35)
+    // Single-line detection (origin.x < 0.35)
     let leftPanelEvent = DetectedText(text: "Pumpkin Event", boundingBox: CGRect(x: 0.05, y: 0.5, width: 0.1, height: 0.08))
     let rightPanelEvent = DetectedText(text: "Tycoon Boost", boundingBox: CGRect(x: 0.75, y: 0.5, width: 0.1, height: 0.08))
     let leftNonEvent = DetectedText(text: "Settings", boundingBox: CGRect(x: 0.05, y: 0.8, width: 0.1, height: 0.05))
@@ -156,6 +156,17 @@ func testEventTargetDetectionBoundingBox() {
     let detectedLeft = WatcherClassifier.findEventTarget(in: [leftPanelEvent, rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)
     assertTrue(detectedLeft != nil, "Expected to find left panel event icon")
     assertEqual(detectedLeft?.text, "Pumpkin Event")
+    assertEqual(detectedLeft?.boundingBox.midX, 0.10)
+    assertEqual(detectedLeft?.boundingBox.midY, 0.54)
+    
+    // Multi-line detection: vertical center between first line top and last line bottom
+    let line1 = DetectedText(text: "Pumpkin", boundingBox: CGRect(x: 0.05, y: 0.52, width: 0.08, height: 0.04)) // maxY: 0.56
+    let line2 = DetectedText(text: "Tycoon", boundingBox: CGRect(x: 0.06, y: 0.46, width: 0.06, height: 0.04))  // minY: 0.46
+    let multiDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: cfg.eventTargetKeywords)
+    assertTrue(multiDetected != nil, "Expected multi-line event target to be detected")
+    assertEqual(multiDetected?.text, "Pumpkin Tycoon")
+    // Expected midY: (0.56 + 0.46) / 2.0 = 0.51
+    assertEqual(Double(multiDetected!.boundingBox.midY), 0.51)
     
     // If only right-side target exists, it should be ignored
     let detectedRight = WatcherClassifier.findEventTarget(in: [rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)

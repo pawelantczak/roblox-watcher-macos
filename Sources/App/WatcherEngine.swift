@@ -128,23 +128,22 @@ public class WatcherManager {
                         
                         // Crop Event Icon for Debug UI if enabled
                         if config.autoTeleportToEvent {
-                            for item in detectedItems {
-                                let lower = item.text.lowercased()
-                                let matches = config.eventTargetKeywords.contains { kw in lower.contains(kw.lowercased()) }
-                                if matches && item.boundingBox.origin.x < 0.35 {
-                                    let localX = Double(item.boundingBox.midX) * winBounds.width
-                                    let localY = (1.0 - Double(item.boundingBox.midY)) * winBounds.height
-                                    let iconCenterY = max(0, localY - 45)
-                                    let cropRect = CGRect(x: max(0, localX - 60), y: max(0, iconCenterY - 60), width: 120, height: 120)
-                                    if let cropped = screenImage.cropping(to: cropRect) {
-                                        let rep = NSBitmapImageRep(cgImage: cropped)
-                                        if let png = rep.representation(using: .png, properties: [:]) {
-                                            self.latestEventCropBase64 = png.base64EncodedString()
-                                            self.latestEventNormalizedCoords = CGPoint(x: localX / winBounds.width, y: iconCenterY / winBounds.height)
-                                            self.latestEventMatchedText = item.text
-                                        }
+                            var target = WatcherClassifier.findEventTarget(in: detectedItems, keywords: config.eventTargetKeywords)
+                            if target == nil {
+                                let sidebarItems = VisionService.scanLeftSidebarForText(image: screenImage)
+                                target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: config.eventTargetKeywords)
+                            }
+                            if let target = target {
+                                let localX = Double(target.boundingBox.midX) * winBounds.width
+                                let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
+                                let cropRect = CGRect(x: max(0, localX - 60), y: max(0, localY - 60), width: 120, height: 120)
+                                if let cropped = screenImage.cropping(to: cropRect) {
+                                    let rep = NSBitmapImageRep(cgImage: cropped)
+                                    if let png = rep.representation(using: .png, properties: [:]) {
+                                        self.latestEventCropBase64 = png.base64EncodedString()
+                                        self.latestEventNormalizedCoords = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
+                                        self.latestEventMatchedText = target.text
                                     }
-                                    break
                                 }
                             }
                         }

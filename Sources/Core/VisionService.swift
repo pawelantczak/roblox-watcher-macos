@@ -63,6 +63,45 @@ public struct VisionService {
         return (detected, durationMs)
     }
     
+    public static func scanLeftSidebarForText(image: CGImage, sidebarWidthRatio: CGFloat = 0.20, scale: Int = 4) -> [DetectedText] {
+        let sidebarWidth = max(1, Int(CGFloat(image.width) * sidebarWidthRatio))
+        guard let sidebar = image.cropping(to: CGRect(x: 0, y: 0, width: sidebarWidth, height: image.height)) else { return [] }
+        
+        let targetW = sidebarWidth * scale
+        let targetH = image.height * scale
+        guard let ctx = CGContext(
+            data: nil,
+            width: targetW,
+            height: targetH,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return [] }
+        
+        ctx.interpolationQuality = .high
+        ctx.draw(sidebar, in: CGRect(x: 0, y: 0, width: targetW, height: targetH))
+        guard let upscaled = ctx.makeImage() else { return [] }
+        
+        var detected: [DetectedText] = []
+        let req = VNRecognizeTextRequest { r, _ in
+            guard let observations = r.results as? [VNRecognizedTextObservation] else { return }
+            for obs in observations {
+                guard let top = obs.topCandidates(1).first else { continue }
+                let mappedX = (obs.boundingBox.origin.x * CGFloat(sidebarWidth)) / CGFloat(image.width)
+                let mappedW = (obs.boundingBox.size.width * CGFloat(sidebarWidth)) / CGFloat(image.width)
+                let fullBox = CGRect(x: mappedX, y: obs.boundingBox.origin.y, width: mappedW, height: obs.boundingBox.size.height)
+                detected.append(DetectedText(text: top.string, boundingBox: fullBox))
+            }
+        }
+        req.recognitionLevel = .accurate
+        req.usesLanguageCorrection = false
+        
+        let handler = VNImageRequestHandler(cgImage: upscaled, options: [:])
+        try? handler.perform([req])
+        return detected
+    }
+    
     public static func createThumbnailBase64(from imageURL: URL, maxDimension: CGFloat = 960) -> String? {
         guard FileManager.default.fileExists(atPath: imageURL.path),
               let source = CGImageSourceCreateWithURL(imageURL as CFURL, nil) else { return nil }

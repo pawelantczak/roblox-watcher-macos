@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
+- **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
+
 ---
 
 ## [1.2.0] - 2026-11-18

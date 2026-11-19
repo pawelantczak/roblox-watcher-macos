@@ -50,22 +50,41 @@ public struct WatcherClassifier {
     }
     
     /// Identifies event icons on the left UI panel (origin.x < maxNormalizedX).
+    /// If a single line matches, targets its center. If two or more lines match,
+    /// targets the vertical center between first line top and last line bottom.
     public static func findEventTarget(
         in items: [DetectedText],
         keywords: [String],
         maxNormalizedX: CGFloat = 0.35
     ) -> DetectedText? {
+        var matches: [DetectedText] = []
         for item in items {
+            guard item.boundingBox.origin.x < maxNormalizedX else { continue }
             let lower = item.text.lowercased()
-            let matches = keywords.contains { kw in
+            let isMatch = keywords.contains { kw in
                 let k = kw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                 return !k.isEmpty && lower.contains(k)
             }
-            if matches && item.boundingBox.origin.x < maxNormalizedX {
-                return item
+            if isMatch {
+                matches.append(item)
             }
         }
-        return nil
+        
+        guard !matches.isEmpty else { return nil }
+        if matches.count == 1 {
+            return matches[0]
+        }
+        
+        // Sort lines top-to-bottom (higher y in Vision space = higher on screen)
+        let sorted = matches.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
+        let topY = sorted.map { $0.boundingBox.maxY }.max() ?? sorted[0].boundingBox.maxY
+        let bottomY = sorted.map { $0.boundingBox.minY }.min() ?? sorted[0].boundingBox.minY
+        let minX = sorted.map { $0.boundingBox.minX }.min() ?? sorted[0].boundingBox.minX
+        let maxX = sorted.map { $0.boundingBox.maxX }.max() ?? sorted[0].boundingBox.maxX
+        
+        let combinedBox = CGRect(x: minX, y: bottomY, width: max(0.001, maxX - minX), height: max(0.001, topY - bottomY))
+        let combinedText = sorted.map { $0.text }.joined(separator: " ")
+        return DetectedText(text: combinedText, boundingBox: combinedBox)
     }
 }
 
