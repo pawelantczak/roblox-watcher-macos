@@ -31,6 +31,44 @@ public struct StorageService {
         return getStorageDirectory().appendingPathComponent("latest_capture.png")
     }
     
+    public static func getLogFileURL() -> URL {
+        return getStorageDirectory().appendingPathComponent("watcher.log")
+    }
+    
+    private static let logFileQueue = DispatchQueue(label: "xyz.ps99clan.robloxwatcher.logqueue")
+    
+    public static func appendLogToFile(_ line: String) {
+        logFileQueue.async {
+            let fileURL = getLogFileURL()
+            let logLine = line + "\n"
+            if let data = logLine.data(using: .utf8) {
+                if FileManager.default.fileExists(atPath: fileURL.path) {
+                    if let handle = try? FileHandle(forWritingTo: fileURL) {
+                        handle.seekToEndOfFile()
+                        handle.write(data)
+                        try? handle.close()
+                    }
+                } else {
+                    try? data.write(to: fileURL, options: .atomic)
+                }
+            }
+        }
+    }
+    
+    public static func exportLogFile(to targetURL: URL) -> Bool {
+        return logFileQueue.sync {
+            let sourceURL = getLogFileURL()
+            guard FileManager.default.fileExists(atPath: sourceURL.path) else { return false }
+            try? FileManager.default.removeItem(at: targetURL)
+            do {
+                try FileManager.default.copyItem(at: sourceURL, to: targetURL)
+                return true
+            } catch {
+                return false
+            }
+        }
+    }
+    
     public static func loadConfig() -> Config {
         let file = getConfigFileURL()
         if let data = try? Data(contentsOf: file),

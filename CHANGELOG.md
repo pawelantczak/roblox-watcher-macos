@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Persistent File Logging (`StorageService`)**: Added thread-safe asynchronous file logging writing all telemetry and watcher events directly to `~/Library/Application Support/RobloxWatcher/watcher.log`.
+- **Extended UI Log Buffer**: Increased live stream buffer in `WatcherEngine` and WebKit bridge from 50 to 200 log entries for improved diagnostic visibility.
+- **Log Export Button**: Added a "💾 Save" button in the Live Activity Stream dashboard header triggering native macOS `NSSavePanel` file export.
 - **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
 - **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
 

@@ -15,6 +15,7 @@ public enum DashboardAction: String {
     case saveConfig
     case resetStats
     case requestPermissions
+    case exportLogs
 }
 
 // MARK: - WebKit Script Message Bridge
@@ -73,6 +74,21 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
                 CGRequestScreenCaptureAccess()
                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
                     NSWorkspace.shared.open(url)
+                }
+            }
+        case .exportLogs:
+            DispatchQueue.main.async {
+                let panel = NSSavePanel()
+                panel.title = "Save Full Roblox Watcher Log"
+                panel.nameFieldStringValue = "roblox-watcher.log"
+                panel.canCreateDirectories = true
+                panel.begin { response in
+                    guard response == .OK, let targetURL = panel.url else { return }
+                    if !StorageService.exportLogFile(to: targetURL) {
+                        let text = WatcherManager.shared.logs.joined(separator: "\n") + "\n"
+                        try? text.write(to: targetURL, atomically: true, encoding: .utf8)
+                    }
+                    WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [System] Full log exported to: \(targetURL.lastPathComponent)")
                 }
             }
         }

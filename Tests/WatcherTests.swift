@@ -266,6 +266,27 @@ func testUpdateServiceSemverComparison() {
     assertFalse(UpdateService.isNewerVersion(remote: "invalid", current: "1.0.0"))
 }
 
+func testLogPersistence() {
+    print("▶ Running: testLogPersistence")
+    let logUrl = StorageService.getLogFileURL()
+    assertTrue(logUrl.path.hasSuffix("watcher.log"))
+    
+    let testLine = "[Test] Persistent log verification \(UUID().uuidString)"
+    StorageService.appendLogToFile(testLine)
+    Thread.sleep(forTimeInterval: 0.15)
+    
+    let content = (try? String(contentsOf: logUrl, encoding: .utf8)) ?? ""
+    assertTrue(content.contains(testLine), "Expected watcher.log to contain written log line")
+    
+    // Verify exportLogFile copies the full file
+    let tempExportURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_export_\(UUID().uuidString).log")
+    let exportSuccess = StorageService.exportLogFile(to: tempExportURL)
+    assertTrue(exportSuccess, "Expected exportLogFile to succeed")
+    let exportedContent = (try? String(contentsOf: tempExportURL, encoding: .utf8)) ?? ""
+    assertTrue(exportedContent.contains(testLine), "Exported file should contain all logged lines")
+    try? FileManager.default.removeItem(at: tempExportURL)
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -286,6 +307,7 @@ struct TestRunner {
         testSingleInstanceKernelLock()
         testPowerServiceSleepPrevention()
         testUpdateServiceSemverComparison()
+        testLogPersistence()
         
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000.0
         print("==========================================")

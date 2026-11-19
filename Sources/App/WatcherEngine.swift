@@ -29,18 +29,18 @@ public class WatcherManager {
     }
     
     public func appendLog(_ line: String) {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
         logLock.lock()
-        defer { logLock.unlock() }
-        logs.append(line.trimmingCharacters(in: .whitespacesAndNewlines))
-        if logs.count > 50 {
-            logs.removeFirst()
-        }
+        logs.append(trimmed)
+        if logs.count > 200 { logs.removeFirst() }
+        logLock.unlock()
+        StorageService.appendLogToFile(trimmed)
     }
     
     public func getRecentLogs() -> [String] {
         logLock.lock()
         defer { logLock.unlock() }
-        return Array(logs.suffix(25))
+        return Array(logs.suffix(200))
     }
     
     public func start() {
