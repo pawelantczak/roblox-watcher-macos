@@ -16,6 +16,7 @@ public enum DashboardAction: String {
     case resetStats
     case requestPermissions
     case exportLogs
+    case clearLogs
 }
 
 // MARK: - WebKit Script Message Bridge
@@ -91,6 +92,8 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
                     WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [System] Full log exported to: \(targetURL.lastPathComponent)")
                 }
             }
+        case .clearLogs:
+            WatcherManager.shared.clearLogs()
         }
     }
 }

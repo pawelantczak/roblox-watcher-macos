@@ -245,7 +245,9 @@
             <button id="downloadLogsBtn" class="text-xs text-slate-400 hover:text-cyan-300 font-mono transition-colors flex items-center gap-1" title="Download entire log file (watcher.log)">
               <span>💾 Download</span>
             </button>
-            <button id="clearLogsBtn" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">Clear</button>
+            <button id="clearLogsBtn" class="text-xs text-slate-400 hover:text-rose-400 font-mono transition-colors flex items-center gap-1" title="Clear logs from memory">
+              <span>🗑 Clear</span>
+            </button>
           </div>
         </div>
         
@@ -511,6 +513,7 @@
     });
 
     document.getElementById('clearLogsBtn').addEventListener('click', () => {
+      sendNative({ action: 'clearLogs' });
       logsConsole.innerHTML = '<div class="text-slate-500">// Console cleared</div>';
     });
 
@@ -604,32 +607,36 @@
       }
 
       // Live Logs & CONDITIONAL AUTO-SCROLL
-      if (data.logs && data.logs.length > 0) {
-        logsConsole.innerHTML = data.logs.map(l => {
-          const lower = l.toLowerCase();
-          let color = 'text-slate-300';
-          
-          if (lower.includes('permission') || lower.includes('[alert]') || lower.includes('[error]')) {
-            // Lack of permissions / errors: RED
-            color = 'text-rose-400 font-bold';
-          } else if (lower.includes('[anti-afk]') || lower.includes('keep-alive')) {
-            // Anti-AFK action: GREEN
-            color = 'text-emerald-400 font-semibold';
-          } else if (lower.includes('reconnect') || lower.includes('relaunch') || lower.includes('[cooldown]')) {
-            // Reconnect / cooldown: YELLOW
-            color = 'text-amber-300 font-semibold';
-          } else if (lower.includes('[event nav]') || lower.includes('[decision]') || lower.includes('[action]') || lower.includes('[success]')) {
-            color = 'text-cyan-300 font-semibold';
-          } else if (lower.includes('[process]')) {
-            color = 'text-slate-400 font-medium';
-          } else if (lower.includes('[countdown]')) {
-            color = 'text-cyan-500';
-          }
-          return `<div class="${color}">${escapeHtml(l)}</div>`;
-        }).join('');
+      if (data.logs) {
+        if (data.logs.length > 0) {
+          logsConsole.innerHTML = data.logs.map(l => {
+            const lower = l.toLowerCase();
+            let color = 'text-slate-300';
+            
+            if (lower.includes('permission') || lower.includes('[alert]') || lower.includes('[error]')) {
+              // Lack of permissions / errors: RED
+              color = 'text-rose-400 font-bold';
+            } else if (lower.includes('[anti-afk]') || lower.includes('keep-alive')) {
+              // Anti-AFK action: GREEN
+              color = 'text-emerald-400 font-semibold';
+            } else if (lower.includes('reconnect') || lower.includes('relaunch') || lower.includes('[cooldown]')) {
+              // Reconnect / cooldown: YELLOW
+              color = 'text-amber-300 font-semibold';
+            } else if (lower.includes('[event nav]') || lower.includes('[decision]') || lower.includes('[action]') || lower.includes('[success]')) {
+              color = 'text-cyan-300 font-semibold';
+            } else if (lower.includes('[process]')) {
+              color = 'text-slate-400 font-medium';
+            } else if (lower.includes('[countdown]')) {
+              color = 'text-cyan-500';
+            }
+            return `<div class="${color}">${escapeHtml(l)}</div>`;
+          }).join('');
 
-        if (isAutoScrollEnabled) {
-          logsConsole.scrollTop = logsConsole.scrollHeight;
+          if (isAutoScrollEnabled) {
+            logsConsole.scrollTop = logsConsole.scrollHeight;
+          }
+        } else {
+          logsConsole.innerHTML = '<div class="text-slate-500">// Console cleared</div>';
         }
       }
 

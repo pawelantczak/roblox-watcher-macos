@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **In-Memory Log Clearing**: Hooked the "🗑 Clear" action button to `WatcherManager.shared.clearLogs()` via native WebKit bridge so clicking Clear empties the in-memory RAM buffer rather than repopulating on the next polling cycle.
+- **Activity Stream Action Icons**: Standardized icons across all log console header controls ("🗑 Clear", "💾 Download", "⬇ Resume live").
 - **Build Artifact Cleanup (`build.sh`)**: Added automatic pre-build cleanup of previously generated CLI binaries, DMG/ZIP archives, and app bundles, plus a standalone `./build.sh clean` command.
 - **Persistent File Logging (`StorageService`)**: Added thread-safe asynchronous file logging writing all telemetry and watcher events directly to `~/Library/Application Support/RobloxWatcher/watcher.log`.
 - **Extended UI Log Buffer**: Increased live stream buffer in `WatcherEngine` and WebKit bridge from 50 to 200 log entries for improved diagnostic visibility.
-- **Log Export Button**: Added a "💾 Save" button in the Live Activity Stream dashboard header triggering native macOS `NSSavePanel` file export.
+- **Log Export Button**: Added a "💾 Download" button in the Live Activity Stream dashboard header triggering native macOS `NSSavePanel` file export.
 - **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
 - **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
 

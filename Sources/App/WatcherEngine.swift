@@ -37,6 +37,12 @@ public class WatcherManager {
         StorageService.appendLogToFile(trimmed)
     }
     
+    public func clearLogs() {
+        logLock.lock()
+        logs.removeAll()
+        logLock.unlock()
+    }
+    
     public func getRecentLogs() -> [String] {
         logLock.lock()
         defer { logLock.unlock() }
@@ -78,11 +84,8 @@ public class WatcherManager {
             GameService.executeManualEventClick(
                 normalizedCoords: self.latestEventNormalizedCoords,
                 keywords: self.config.eventTargetKeywords,
-                logger: { msg in self.appendLog(msg) },
-                onFound: { norm, text in
-                    self.latestEventNormalizedCoords = norm
-                    self.latestEventMatchedText = text
-                }
+                logger: { self.appendLog($0) },
+                onFound: { self.latestEventNormalizedCoords = $0; self.latestEventMatchedText = $1 }
             )
         }
     }
@@ -206,9 +209,7 @@ public class WatcherManager {
                                     self.appendLog(msg)
                                 }
                                 if config.autoTeleportToEvent {
-                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { msg in
-                                        self.appendLog(msg)
-                                    }
+                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { self.appendLog($0) }
                                 }
                             }
                         } else {
@@ -225,9 +226,7 @@ public class WatcherManager {
                                 let currentBounds = liveWin?.bounds ?? winBounds
                                 let targetPid = liveWin?.ownerPID ?? (WindowService.findRobloxProcess()?.pid ?? 0)
                                 if targetPid > 0 {
-                                    InputService.clickRobloxCenterInBackground(bounds: currentBounds, pid: targetPid) { msg in
-                                        self.appendLog(msg)
-                                    }
+                                    InputService.clickRobloxCenterInBackground(bounds: currentBounds, pid: targetPid) { self.appendLog($0) }
                                 }
                             }
                         }
