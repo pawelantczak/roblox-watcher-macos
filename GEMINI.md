@@ -46,7 +46,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Detects disconnect dialogs, error codes (`277`, `279`, `267`, `271`, `268`, `273`), and server shutdown notices without window focus.
    - Filters out non-fatal notification toasts (such as "You've disconnected from Voice Chat") using configurable `ignorePhrases`.
 2. **Reconnection & Teleport**:
-   - Dispatches synthesized mouse events via dual-layer window activation (`NSAppleScript` + `NSRunningApplication.activate`).
+   - Dispatches synthesized mouse events via dual-layer window activation (`NSRunningApplication.activate` by bundle ID `com.roblox.RobloxPlayer` + AppleScript fallback).
    - Targets the top of the first recognized line of event text (horizontal midpoint and vertical top edge `maxY`), eliminating arbitrary pixel offsets and landing directly at the event button graphic.
    - Utilizes focused 4x super-sampled scanning on the left 20% sidebar to guarantee small label detection on low-resolution windows.
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.

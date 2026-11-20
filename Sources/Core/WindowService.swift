@@ -73,16 +73,23 @@ public struct WindowService {
     }
     
     public static func activateRoblox() {
-        let script = "tell application \"RobloxPlayer\" to activate"
-        var error: NSDictionary?
-        NSAppleScript(source: script)?.executeAndReturnError(&error)
+        if let robloxApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.roblox.RobloxPlayer").first {
+            robloxApp.activate(options: [.activateAllWindows])
+            usleep(250_000)
+            return
+        }
         
         for app in NSWorkspace.shared.runningApplications {
             if app.bundleIdentifier == "com.roblox.RobloxPlayer" || app.localizedName == "Roblox" {
                 app.activate(options: [.activateAllWindows])
-                break
+                usleep(250_000)
+                return
             }
         }
+        
+        let script = "tell application id \"com.roblox.RobloxPlayer\" to activate"
+        var error: NSDictionary?
+        NSAppleScript(source: script)?.executeAndReturnError(&error)
         usleep(300_000)
     }
     

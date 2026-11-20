@@ -25,7 +25,7 @@ public enum DashboardAction: String {
 
 public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
     public weak var webView: WKWebView?
-    
+     
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any] else { return }
         NativeBridgeHandler.handleAction(body: body, webView: webView)
