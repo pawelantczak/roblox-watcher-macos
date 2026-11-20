@@ -66,7 +66,7 @@ public struct InputService {
         // 2. Warp hardware cursor to target point with jitter
         CGWarpMouseCursorPosition(targetPoint)
         
-        // 3. Click 1: Confirms active window focus in AppKit
+        // 3. Click 1: Focus click to confirm active window focus in AppKit
         if let down1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: targetPoint, mouseButton: .left),
            let up1 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: targetPoint, mouseButton: .left) {
             down1.post(tap: .cghidEventTap)
@@ -74,15 +74,15 @@ public struct InputService {
             up1.post(tap: .cghidEventTap)
         }
         
-        // Dwell pause so Roblox frame updates
-        usleep(100_000)
+        // Dwell pause so Roblox window and frame update
+        usleep(80_000)
         
-        // 4. Click 2: Guaranteed in-game input registered by Roblox UserInputService
-        if let down2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: targetPoint, mouseButton: .left),
-           let up2 = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: targetPoint, mouseButton: .left) {
-            down2.post(tap: .cghidEventTap)
+        // 4. Send Spacebar key event (jump) to reset Roblox idle timer
+        if let spaceDown = CGEvent(keyboardEventSource: nil, virtualKey: 49, keyDown: true),
+           let spaceUp = CGEvent(keyboardEventSource: nil, virtualKey: 49, keyDown: false) {
+            spaceDown.post(tap: .cghidEventTap)
             usleep(40_000)
-            up2.post(tap: .cghidEventTap)
+            spaceUp.post(tap: .cghidEventTap)
         }
         
         // Allow game engine to process input before focus restore
@@ -94,6 +94,6 @@ public struct InputService {
             frontmost?.activate()
         }
         
-        logger?("\(WindowService.logTimestamp()) [Anti-AFK] Keep-alive dual-click sent at (\(Int(targetPoint.x)), \(Int(targetPoint.y))) with verified focus & restore.")
+        logger?("\(WindowService.logTimestamp()) [Anti-AFK] Keep-alive signal (Focus Click + Space) sent at (\(Int(targetPoint.x)), \(Int(targetPoint.y))) with verified focus & restore.")
     }
 }

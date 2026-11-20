@@ -50,8 +50,8 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Utilizes focused 4x super-sampled scanning on the left 20% sidebar to guarantee small label detection on low-resolution windows.
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
 3. **Seamless Anti-AFK Keep-Alive**:
-   - Delivers a mouse click with randomized spatial jitter (`±8px`) to the Roblox window every 10 minutes (configurable 1m–19m via live dashboard input) using a 50ms Focus-Click-Restore sequence.
-   - Momentarily focuses Roblox so `UserInputService` accepts the input to reset the 20-minute idle kick timer, then instantly restores previous application focus and returns the hardware cursor to its original position.
+   - Delivers a focus click followed by a native Spacebar key event (`kVK_Space`, character jump) with randomized spatial jitter (`±8px`) to the Roblox window every 10 minutes (configurable 1m–19m via live dashboard input) using a Focus-Click-Space-Restore sequence.
+   - Momentarily focuses Roblox so `UserInputService` accepts the jump input to reset the 20-minute idle kick timer without accidental clicks on viewport UI elements or pets, then instantly restores previous application focus and returns the hardware cursor to its original position.
 4. **Dock & Menu Bar Integration**:
    - Running application icon in the Dock restores the main window when clicked (`applicationShouldHandleReopen`).
    - Menu bar status item displays live watcher state and provides start/stop and window display controls.

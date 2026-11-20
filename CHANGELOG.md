@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Anti-AFK Focus Click & Spacebar Signal**: Upgraded keep-alive mechanism in `InputService.swift` from dual mouse clicks to a Focus Click followed by a native Spacebar key event (`kVK_Space`), triggering an in-game jump to reset the 20-minute idle kick timer without accidental clicks on viewport UI elements or pets.
 - **Anti-AFK Card Typography & Layout Polish**: Refactored the Anti-AFK card into a clean 2-row layout with full-width title, stacked state/countdown (`whitespace-nowrap`), and right-aligned interval stepper, eliminating word-wrapping and clipping across both running and paused states.
 - **Configurable Anti-AFK Interval**: Changed default trigger delay from 5 minutes to 10 minutes (600s) and embedded an interactive interval manipulation pill directly within the Anti-AFK dashboard card.
 - **Immediate Anti-AFK Live Application**: User modifications are applied immediately in memory and persisted to disk without requiring a save button or stopping/restarting the watcher.
