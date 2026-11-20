@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enlarged Event Card & Inline Keywords Config**: Increased the Event Icon card height (from 78px to 96px) and enlarged the preview crop box to 80x80px (+90% area) for clearer visibility, and embedded an interactive inline keywords input field with immediate auto-save on Enter or unfocus (`setEventKeywords` action), synchronized directly with the Settings modal without opening settings.
 - **Dynamic Menubar Status Favicon**: Set the browser favicon to use the native menu bar status icon (`menubar_inactive.png` when stopped, dynamically switching to `menubar_active.png` when running), and added automated `/favicon.ico` request aliasing in `WebServerService.swift`.
 - **Web Server Toggle in Settings**: Added an "Enable Remote Web Dashboard" toggle in the configuration modal, disabled by default, dynamically starting and stopping the background listener on change.
 - **Embedded Remote Web Server & Dual Transport**: Introduced zero-dependency `WebServerService.swift` using native Apple `Network.framework` (`NWListener`) serving the full web dashboard remotely over LAN/WAN at `http://<mac-ip>:8765`, streaming live telemetry updates via Server-Sent Events (`/events`) and accepting remote control actions (`/api/action`), while maintaining full 0ms AppKit `WKWebView` desktop bridge capability.

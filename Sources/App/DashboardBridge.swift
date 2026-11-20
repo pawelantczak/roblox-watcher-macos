@@ -18,6 +18,7 @@ public enum DashboardAction: String {
     case exportLogs
     case clearLogs
     case setAntiAfkInterval
+    case setEventKeywords
 }
 
 // MARK: - WebKit Script Message Bridge
@@ -118,6 +119,15 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
                     WatcherManager.shared.config.antiAfkIntervalSeconds = seconds
                     StorageService.saveConfig(WatcherManager.shared.config)
                     WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Anti-AFK Config] Interval set to \(Int(minutes))m (\(Int(seconds))s).")
+                }
+            }
+        case .setEventKeywords:
+            if let kws = body["keywords"] as? [String] {
+                let cleaned = kws.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                if WatcherManager.shared.config.eventTargetKeywords != cleaned {
+                    WatcherManager.shared.config.eventTargetKeywords = cleaned
+                    StorageService.saveConfig(WatcherManager.shared.config)
+                    WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Event Config] Target keywords updated: [\(cleaned.joined(separator: ", "))]")
                 }
             }
         }
