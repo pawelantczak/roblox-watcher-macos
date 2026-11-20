@@ -88,6 +88,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Tagging is strictly reserved for the human user.
 2. **ALWAYS UPDATE CHANGELOG.md**:
    - Every feature, fix, or breaking change must be documented in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md) adhering to the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+   - **End-User Friendly Only**: Write changelog entries strictly from the end-user's perspective focusing on functional aspects, observable behavior, and user benefits. Never include low-level technical jargon, internal code identifiers, framework names, internal file names, or implementation details.
 3. **ALWAYS UPDATE GEMINI.md**:
    - Any architectural change, new script, configuration field, or rule modification must be recorded in this file ([GEMINI.md](file:///Users/krr/Sources/roblox-watcher/GEMINI.md)).
 4. **VERSION BUMPING DETERMINED BY CHANGELOG**:

@@ -9,39 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.3.0] - 2026-11-20
+
 ### Added
-- **Enlarged Event Card & Inline Keywords Config**: Increased the Event Icon card height (from 78px to 96px) and enlarged the preview crop box to 80x80px (+90% area) for clearer visibility, and embedded an interactive inline keywords input field with immediate auto-save on Enter or unfocus (`setEventKeywords` action), synchronized directly with the Settings modal without opening settings.
-- **Dynamic Menubar Status Favicon**: Set the browser favicon to use the native menu bar status icon (`menubar_inactive.png` when stopped, dynamically switching to `menubar_active.png` when running), and added automated `/favicon.ico` request aliasing in `WebServerService.swift`.
-- **Web Server Toggle in Settings**: Added an "Enable Remote Web Dashboard" toggle in the configuration modal, disabled by default, dynamically starting and stopping the background listener on change.
-- **Embedded Remote Web Server & Dual Transport**: Introduced zero-dependency `WebServerService.swift` using native Apple `Network.framework` (`NWListener`) serving the full web dashboard remotely over LAN/WAN at `http://<mac-ip>:8765`, streaming live telemetry updates via Server-Sent Events (`/events`) and accepting remote control actions (`/api/action`), while maintaining full 0ms AppKit `WKWebView` desktop bridge capability.
-- **Structured JSONL Logging & Base64 Event Icon Persistence**: Migrated storage from flat `watcher.log` to structured `watcher.jsonl` (and `roblox-watcher.jsonl` export) encoding `LogRecord` objects with ISO8601 timestamps and embedding recognized event icons as base64 PNG data in the JSONL stream when verified following a disconnect.
-- **Anti-AFK Focus Click & Spacebar Signal**: Upgraded keep-alive mechanism in `InputService.swift` from dual mouse clicks to a Focus Click followed by a native Spacebar key event (`kVK_Space`), triggering an in-game jump to reset the 20-minute idle kick timer without accidental clicks on viewport UI elements or pets.
-- **Anti-AFK Card Typography & Layout Polish**: Refactored the Anti-AFK card into a clean 2-row layout with full-width title, stacked state/countdown (`whitespace-nowrap`), and right-aligned interval stepper, eliminating word-wrapping and clipping across both running and paused states.
-- **Configurable Anti-AFK Interval**: Changed default trigger delay from 5 minutes to 10 minutes (600s) and embedded an interactive interval manipulation pill directly within the Anti-AFK dashboard card.
-- **Immediate Anti-AFK Live Application**: User modifications are applied immediately in memory and persisted to disk without requiring a save button or stopping/restarting the watcher.
-- **Blueish Activity Log Styling**: Highlighted Anti-AFK interval changes in bright sky-blue (`text-sky-400 font-bold`) within the live log stream.
-- **In-Memory Log Clearing**: Hooked the "🗑 Clear" action button to `WatcherManager.shared.clearLogs()` via native WebKit bridge so clicking Clear empties the in-memory RAM buffer rather than repopulating on the next polling cycle.
-- **Activity Stream Action Icons**: Standardized icons across all log console header controls ("🗑 Clear", "💾 Download", "⬇ Resume live").
-- **Build Artifact Cleanup (`build.sh`)**: Added automatic pre-build cleanup of previously generated CLI binaries, DMG/ZIP archives, and app bundles, plus a standalone `./build.sh clean` command.
-- **Persistent File Logging (`StorageService`)**: Added thread-safe asynchronous file logging writing all telemetry and watcher events directly to `~/Library/Application Support/RobloxWatcher/watcher.log`.
-- **Extended UI Log Buffer**: Increased live stream buffer in `WatcherEngine` and WebKit bridge from 50 to 200 log entries for improved diagnostic visibility.
-- **Log Export Button**: Added a "💾 Download" button in the Live Activity Stream dashboard header triggering native macOS `NSSavePanel` file export.
-- **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
-- **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
+- **Remote Web Dashboard**: Monitor and control Roblox Watcher from any browser on your phone, tablet, or another computer on your local network. Includes an enable/disable toggle in Settings, live activity updates, remote controls, and a dynamic browser tab icon matching watcher status.
+- **Bigger Event Card & Quick Keywords**: Made the detected event icon preview 90% larger and added an inline keyword editor right on the card so you can update target event words without opening Settings.
+- **Jump-Based Anti-AFK**: Replaced mouse clicks with an in-game character jump to prevent 20-minute idle disconnects without disturbing your mouse cursor or clicking UI elements. Includes direct interval adjustment buttons on the dashboard.
+- **Event Screenshot Logging**: Saved event area pictures are now included alongside activity logs, with an export button to download the complete session log and an in-memory clear button.
+- **Small Window Detection**: High-definition scanning on the left panel guarantees small event buttons are recognized even on low-resolution displays or resized game windows.
 
 ### Changed
-- **Event Icon Target Top of First Line**: Updated event icon click target calculation in `WatcherClassifier.findEventTarget`, `GameService`, and `WatcherEngine` to target the top edge of the first recognized line of text (`firstLine.boundingBox.maxY` in Vision space / top edge on screen) at its horizontal center, replacing vertical midpoint targeting to land directly adjacent to the event icon graphic.
+- **Precise Event Icon Clicks**: Clicks now land directly on the event button icon above the label instead of on the text itself.
 
 ### Fixed
-- **Roblox Window Activation & App Chooser Dialog**: Replaced hardcoded AppleScript `tell application "RobloxPlayer"` in `WindowService.activateRoblox()` with native `NSRunningApplication` bundle-identifier activation (`com.roblox.RobloxPlayer`) and `tell application id "com.roblox.RobloxPlayer"` fallback, eliminating the macOS "Choose Application" modal picker triggered on test clicks.
-- **Primary Network Interface IP Resolution**: Replaced naive alphabetical interface scanning in `WebServerService.getLocalIP()` with kernel routing table lookup via disconnected UDP probe, resolving the true active default route (`10.0.1.86` on `en6` Ethernet rather than secondary Wi-Fi `10.0.1.68` on `en0`), eliminating asymmetric packet routing and `ERR_CONNECTION_REFUSED` errors on LAN clients.
-- **Remote Browser Loading Fix (SSE to Polling Migration)**: Replaced open-ended streaming Server-Sent Events (`/events`) with standard background short-polling of `/api/state` every 1.5s, allowing Chrome and Safari on remote LAN PCs to complete page download in <20ms, dismiss the tab loading spinner, and receive live updates without socket reset errors or infinite streaming indicators.
-- **Web Server Header Pill Click Handler**: Attached an explicit click listener to the remote header pill routing through `openExternal()`, opening the web dashboard in the macOS default browser via `NSWorkspace` from AppKit WKWebView and in a new tab via `window.open` on web clients.
-- **Web Server Header Pill Visibility**: Ensured the header remote URL pill uses direct display styling (`style.display = 'none'`), resolving Tailwind CSS class precedence conflicts where `.flex` overrode `.hidden`.
-- **Remote Web Settings Modal**: Fixed remote web clients unable to open or populate the settings modal by adding a dedicated `/api/config` endpoint and handling JSON responses in `sendNative`.
-- **Top-Aligned Roblox Window Capture**: Aligned the Roblox screenshot container to the top (`items-start` with `object-top`) rather than vertical center.
-- **Stale Event Target Coordinate Caching**: Cleared cached event target coordinates and thumbnail base64 representation when event text is not detected (e.g. while already inside an event area).
-- **Mandatory Live OCR Verification for Event Teleport**: Removed blind execution on unverified cached normalized coordinates in `executeManualEventClick`; now requires active live window capture and OCR text verification before dispatching clicks, preventing misclicks onto unrelated sidebar icons (e.g. pointing hand or circled arrows) after window resizing.
+- **Roblox Focus Without App Prompts**: Clicking "Test Click" or reconnecting activates the Roblox game window immediately without macOS asking you to choose an application.
+- **Misclick Prevention**: Verifies that the event icon is actively visible on screen before clicking, preventing accidental clicks when you are already inside an event area or after resizing the window.
 
 ---
 
