@@ -42,6 +42,8 @@ func testConfigDefaultsAndSerialization() {
     assertTrue(cfg.autoTeleportToEvent)
     assertTrue(cfg.antiAfkEnabled)
     assertEqual(cfg.antiAfkIntervalSeconds, 600.0)
+    assertFalse(cfg.webServerEnabled)
+    assertEqual(cfg.webServerPort, 8765)
     assertTrue(cfg.ignorePhrases.contains("voice chat"))
     assertTrue(cfg.ignorePhrases.contains("voice"))
     
@@ -296,6 +298,24 @@ func testLogPersistence() {
     try? FileManager.default.removeItem(at: tempExportURL)
 }
 
+func testWebServerService() {
+    print("▶ Running: testWebServerService")
+    let ip = WebServerService.getLocalIP()
+    assertTrue(ip != nil && !ip!.isEmpty, "Expected getLocalIP to return a non-empty IP address")
+    
+    let server = WebServerService.shared
+    server.start(port: 18765)
+    Thread.sleep(forTimeInterval: 0.15)
+    assertTrue(server.isRunning, "Expected WebServer to be running")
+    assertEqual(server.port, 18765)
+    
+    // Broadcast state test
+    server.broadcastState("{\"test\": true}")
+    server.stop()
+    Thread.sleep(forTimeInterval: 0.15)
+    assertFalse(server.isRunning, "Expected WebServer to be stopped")
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -317,6 +337,7 @@ struct TestRunner {
         testPowerServiceSleepPrevention()
         testUpdateServiceSemverComparison()
         testLogPersistence()
+        testWebServerService()
         
         let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000.0
         print("==========================================")

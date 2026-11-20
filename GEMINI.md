@@ -21,6 +21,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
     - `LockManager.swift`: POSIX advisory kernel lock (`flock`) engine.
     - `PowerService.swift`: IOKit `IOPMAssertion` display sleep and auto-lock prevention engine.
     - `UpdateService.swift`: Asynchronous GitHub Releases API update checker and semver engine.
+    - `WebServerService.swift`: Zero-dependency `Network.framework` HTTP & SSE server with LAN IP resolution.
   - `Sources/CLI/main.swift`: Headless CLI daemon (~170 lines) polling loop.
   - `Sources/App/`: Modular Native Cocoa GUI application:
     - `AppEntry.swift`: `@main` bootstrap and single-instance validation.
@@ -72,6 +73,8 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Eliminates fallback to capturing the primary display, ensuring personal desktops are never scanned or leaked if Roblox is hidden.
 10. **CrashReporter Auto-Dismissal**:
     - Automatically terminates lingering modal macOS `Problem Reporter` dialogs during force-relaunch to ensure uninterrupted game focus and input delivery.
+11. **Embedded Remote Web Dashboard**:
+    - Built-in zero-dependency `Network.framework` HTTP & SSE server (`WebServerService`) serving the dashboard to any mobile or desktop browser over LAN/WAN at `http://<mac-ip>:8765` while maintaining local AppKit WKWebView IPC.
 
 ---
 

@@ -37,12 +37,16 @@ public struct Config: Codable, Equatable {
         "voice chat",
         "voice"
     ]
+    public var webServerEnabled: Bool = false
+    public var webServerPort: Int = 8765
+    public var webServerAuthToken: String? = nil
     
     public enum CodingKeys: String, CodingKey {
         case checkIntervalSeconds, reconnectCooldownSeconds, placeId, vipServerUrl
         case autoClickReconnect, autoRelaunchOnKick, autoTeleportToEvent
         case antiAfkEnabled, antiAfkIntervalSeconds
         case reconnectButtonText, disconnectKeywords, eventTargetKeywords, ignorePhrases
+        case webServerEnabled, webServerPort, webServerAuthToken
     }
     
     public init() {}
@@ -67,6 +71,9 @@ public struct Config: Codable, Equatable {
         ]
         eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["pumpkin", "tycoon"]
         ignorePhrases = try container.decodeIfPresent([String].self, forKey: .ignorePhrases) ?? ["voice chat", "voice"]
+        webServerEnabled = try container.decodeIfPresent(Bool.self, forKey: .webServerEnabled) ?? false
+        webServerPort = try container.decodeIfPresent(Int.self, forKey: .webServerPort) ?? 8765
+        webServerAuthToken = try container.decodeIfPresent(String.self, forKey: .webServerAuthToken)
     }
 }
 

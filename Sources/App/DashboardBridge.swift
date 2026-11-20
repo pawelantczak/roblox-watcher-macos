@@ -26,8 +26,12 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
     public weak var webView: WKWebView?
     
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let body = message.body as? [String: Any],
-              let actionString = body["action"] as? String,
+        guard let body = message.body as? [String: Any] else { return }
+        NativeBridgeHandler.handleAction(body: body, webView: webView)
+    }
+    
+    public static func handleAction(body: [String: Any], webView: WKWebView? = nil) {
+        guard let actionString = body["action"] as? String,
               let action = DashboardAction(rawValue: actionString) else { return }
         
         switch action {
@@ -47,17 +51,26 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
             let cfg = WatcherManager.shared.config
             if let data = try? JSONEncoder().encode(cfg),
                let jsonString = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async { [weak self] in
-                    self?.webView?.evaluateJavaScript("window.populateConfig(\(jsonString));", completionHandler: nil)
+                DispatchQueue.main.async {
+                    webView?.evaluateJavaScript("window.populateConfig(\(jsonString));", completionHandler: nil)
                 }
             }
         case .saveConfig:
             if let cfgDict = body["config"] as? [String: Any],
                let data = try? JSONSerialization.data(withJSONObject: cfgDict, options: []),
                let newCfg = try? JSONDecoder().decode(Config.self, from: data) {
+                let prevEnabled = WatcherManager.shared.config.webServerEnabled
+                let prevPort = WatcherManager.shared.config.webServerPort
                 WatcherManager.shared.config = newCfg
                 StorageService.saveConfig(newCfg)
                 WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [Config] Settings updated via UI.")
+                if newCfg.webServerEnabled != prevEnabled || newCfg.webServerPort != prevPort {
+                    if newCfg.webServerEnabled {
+                        WebServerService.shared.start(port: UInt16(newCfg.webServerPort))
+                    } else {
+                        WebServerService.shared.stop()
+                    }
+                }
             }
         case .resetStats:
             WatcherManager.shared.sessionRestarts = 0

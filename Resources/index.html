@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link id="dynamicFavicon" rel="icon" type="image/png" href="menubar_inactive.png">
   <title>Roblox Watcher | ps99clan.xyz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -94,6 +95,12 @@
         </span>
         <span id="pulseLabel" class="text-slate-400 font-medium">Inactive</span>
       </div>
+
+      <!-- Remote Web Dashboard Pill -->
+      <button id="remotePill" type="button" style="display: none;" class="items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-dark-950 border border-slate-800 text-xs font-mono text-cyan-400 hover:border-cyan-500/50 hover:bg-slate-800/40 transition-all cursor-pointer" title="Open Web Dashboard in Browser">
+        <span>🌐</span>
+        <span id="remotePillText">Remote</span>
+      </button>
 
       <!-- Settings Button -->
       <button id="openSettingsBtn" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-dark-950/80 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 text-slate-200 text-xs font-medium transition-all">
@@ -231,8 +238,8 @@
           </div>
         </div>
         
-        <div class="relative flex-1 min-h-0 bg-dark-950 border border-slate-800/80 rounded-lg overflow-hidden flex items-center justify-center p-1">
-          <img id="screenshotImg" src="" alt="Latest screen capture" class="hidden w-full h-full object-contain cursor-pointer" />
+        <div class="relative flex-1 min-h-0 bg-dark-950 border border-slate-800/80 rounded-lg overflow-hidden flex items-start justify-center p-1">
+          <img id="screenshotImg" src="" alt="Latest screen capture" class="hidden w-full h-full object-contain object-top cursor-pointer" />
           <div id="screenshotEmpty" class="text-slate-600 font-mono text-xs flex flex-col items-center gap-1.5">
             <svg class="w-7 h-7 text-slate-700 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -327,8 +334,12 @@
 
         <div class="space-y-1.5 border-t border-slate-800 pt-2.5">
           <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="cfgWebServer" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
+            <span class="text-slate-300">Enable Remote Web Dashboard (Port 8765)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="cfgAntiAfk" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
-            <span class="text-slate-300">Anti-AFK background keep-alive (clicks center every 5 min)</span>
+            <span class="text-slate-300">Anti-AFK background keep-alive (Spacebar jump)</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="cfgAutoTeleport" class="rounded bg-dark-950 border-slate-700 text-cyan-400 focus:ring-0" />
@@ -410,6 +421,14 @@
     const updateAvailableBadge = document.getElementById('updateAvailableBadge');
     const updateVersionLabel = document.getElementById('updateVersionLabel');
     let activeReleaseUrl = null;
+    let activeRemoteUrl = null;
+
+    const remotePill = document.getElementById('remotePill');
+    remotePill?.addEventListener('click', () => {
+      if (activeRemoteUrl) {
+        openExternal(activeRemoteUrl);
+      }
+    });
 
     grantPermissionsBtn?.addEventListener('click', () => {
       sendNative({ action: 'requestPermissions' });
@@ -433,16 +452,63 @@
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeApp) {
         window.webkit.messageHandlers.nativeApp.postMessage(msg);
       } else {
-        console.log('Native bridge:', msg);
+        fetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.config && window.populateConfig) {
+            window.populateConfig(data.config);
+          }
+        })
+        .catch(err => console.error('Remote action failed:', err));
       }
     }
 
+    // Remote Polling Listener for standalone browser / mobile access
+    if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.nativeApp) {
+      let isFetching = false;
+      function pollState() {
+        if (isFetching) return;
+        isFetching = true;
+        fetch('/api/state')
+          .then(r => r.json())
+          .then(data => {
+            if (window.updateUIState) {
+              window.updateUIState(data);
+            }
+          })
+          .catch(err => console.error('State poll failed:', err))
+          .finally(() => {
+            isFetching = false;
+          });
+      }
+
+      // Initial state fetch
+      pollState();
+      // Regular background poll matching native 1.5s interval
+      setInterval(pollState, 1500);
+    }
+
     function openExternal(url) {
-      sendNative({ action: 'openExternal', url: url });
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeApp) {
+        sendNative({ action: 'openExternal', url: url });
+      } else {
+        window.open(url, '_blank');
+      }
     }
 
     openSettingsBtn.addEventListener('click', () => {
-      sendNative({ action: 'getConfig' });
+      if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.nativeApp) {
+        fetch('/api/config')
+          .then(r => r.json())
+          .then(cfg => { if (window.populateConfig) window.populateConfig(cfg); })
+          .catch(err => console.error('Failed to load config on web:', err));
+      } else {
+        sendNative({ action: 'getConfig' });
+      }
       settingsModal.classList.remove('hidden');
     });
     closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
@@ -566,6 +632,15 @@
     // Native Callback: Update UI State
     window.updateUIState = function(data) {
       isRunning = data.running;
+
+      // Dynamic Favicon Matching Menubar Status Icon
+      const favicon = document.getElementById('dynamicFavicon');
+      if (favicon) {
+        const iconName = isRunning ? 'menubar_active.png' : 'menubar_inactive.png';
+        if (!favicon.href.endsWith(iconName)) {
+          favicon.href = iconName;
+        }
+      }
       if (isRunning) {
         statusText.innerText = 'RUNNING';
         statusText.className = 'font-mono text-sm font-bold text-cyan-400';
@@ -595,6 +670,18 @@
       restartsCount.innerText = data.restarts ?? 0;
       processPid.innerText = data.robloxPid ? `PID: ${data.robloxPid}` : 'Not Running';
       targetPlaceId.innerText = data.placeId ?? '--';
+
+      // Remote URL Pill
+      activeRemoteUrl = data.remoteUrl || null;
+      const remotePillText = document.getElementById('remotePillText');
+      if (remotePill && remotePillText) {
+        if (data.remoteUrl) {
+          remotePill.style.display = 'inline-flex';
+          remotePillText.innerText = data.remoteUrl.replace('http://', '');
+        } else {
+          remotePill.style.display = 'none';
+        }
+      }
 
       // Anti-AFK Metrics Card
       const afkState = document.getElementById('antiAfkState');
@@ -739,6 +826,8 @@
       document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['pumpkin', 'tycoon']).join(', ');
       document.getElementById('cfgDisconnectKeywords').value = (cfg.disconnectKeywords ?? []).join('\n');
       document.getElementById('cfgIgnorePhrases').value = (cfg.ignorePhrases ?? ['voice chat', 'voice']).join(', ');
+      const webServerCheckbox = document.getElementById('cfgWebServer');
+      if (webServerCheckbox) webServerCheckbox.checked = cfg.webServerEnabled ?? false;
       document.getElementById('cfgAntiAfk').checked = cfg.antiAfkEnabled ?? true;
       document.getElementById('cfgAutoTeleport').checked = cfg.autoTeleportToEvent ?? true;
       document.getElementById('cfgAutoClick').checked = cfg.autoClickReconnect ?? true;
@@ -761,6 +850,7 @@
         eventTargetKeywords: document.getElementById('cfgEventKeywords').value.split(',').map(s => s.trim()).filter(Boolean),
         disconnectKeywords: document.getElementById('cfgDisconnectKeywords').value.split('\n').map(s => s.trim()).filter(Boolean),
         ignorePhrases: document.getElementById('cfgIgnorePhrases').value.split(',').map(s => s.trim()).filter(Boolean),
+        webServerEnabled: document.getElementById('cfgWebServer')?.checked ?? false,
         autoTeleportToEvent: document.getElementById('cfgAutoTeleport').checked,
         autoClickReconnect: document.getElementById('cfgAutoClick').checked,
         autoRelaunchOnKick: document.getElementById('cfgAutoRelaunch').checked,

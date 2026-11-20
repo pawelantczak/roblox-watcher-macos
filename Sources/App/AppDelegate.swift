@@ -80,6 +80,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             UpdateService.shared.checkForUpdates()
         }
         
+        // Start WebServer if enabled
+        if WatcherManager.shared.config.webServerEnabled {
+            WebServerService.shared.start(port: UInt16(WatcherManager.shared.config.webServerPort))
+            WebServerService.shared.onActionReceived = { [weak self] body in
+                NativeBridgeHandler.handleAction(body: body, webView: self?.webView)
+            }
+        }
+        
         // Periodic UI Sync
         updateTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             self?.syncUIState()
@@ -130,11 +138,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     @objc public func toggleWatcherFromMenu() {
-        if WatcherManager.shared.isRunning {
-            WatcherManager.shared.stop()
-        } else {
-            WatcherManager.shared.start()
-        }
+        if WatcherManager.shared.isRunning { WatcherManager.shared.stop() } else { WatcherManager.shared.start() }
         syncUIState()
     }
     
@@ -206,11 +210,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             "accessibilityGranted": AXIsProcessTrusted(),
             "updateAvailable": updater.isUpdateAvailable,
             "latestVersion": updater.latestVersion as Any,
-            "releaseUrl": updater.releaseUrl as Any
+            "releaseUrl": updater.releaseUrl as Any,
+            "remoteUrl": ((mgr.config.webServerEnabled && WebServerService.shared.isRunning) ? WebServerService.getLocalIP().map { "http://\($0):\(mgr.config.webServerPort)" } : nil) as Any
         ]
         
         if let jsonData = try? JSONSerialization.data(withJSONObject: state, options: []),
            let jsonStr = String(data: jsonData, encoding: .utf8) {
+            WebServerService.shared.broadcastState(jsonStr)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.updateStatusBarIcon(isActive: mgr.isRunning)
@@ -233,5 +239,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     public func applicationWillTerminate(_ notification: Notification) {
         WatcherManager.shared.stop()
+        WebServerService.shared.stop()
     }
 }
