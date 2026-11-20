@@ -160,15 +160,18 @@ func testEventTargetDetectionBoundingBox() {
     assertEqual(detectedLeft?.text, "Pumpkin Event")
     assertEqual(detectedLeft?.boundingBox.midX, 0.10)
     assertEqual(detectedLeft?.boundingBox.midY, 0.54)
+    assertEqual(detectedLeft?.clickPoint.x, 0.10)
+    assertEqual(detectedLeft?.clickPoint.y, 0.58) // Top of first line (maxY)
     
-    // Multi-line detection: vertical center between first line top and last line bottom
+    // Multi-line detection: target top of first recognized line
     let line1 = DetectedText(text: "Pumpkin", boundingBox: CGRect(x: 0.05, y: 0.52, width: 0.08, height: 0.04)) // maxY: 0.56
     let line2 = DetectedText(text: "Tycoon", boundingBox: CGRect(x: 0.06, y: 0.46, width: 0.06, height: 0.04))  // minY: 0.46
     let multiDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: cfg.eventTargetKeywords)
     assertTrue(multiDetected != nil, "Expected multi-line event target to be detected")
     assertEqual(multiDetected?.text, "Pumpkin Tycoon")
-    // Expected midY: (0.56 + 0.46) / 2.0 = 0.51
-    assertEqual(Double(multiDetected!.boundingBox.midY), 0.51)
+    assertEqual(Double(multiDetected!.boundingBox.midY), 0.51) // Combined box center for crop preview
+    assertEqual(multiDetected?.clickPoint.x, 0.09) // MidX of first line
+    assertEqual(multiDetected?.clickPoint.y, 0.56) // Top of first line (maxY of line1)
     
     // If only right-side target exists, it should be ignored
     let detectedRight = WatcherClassifier.findEventTarget(in: [rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)

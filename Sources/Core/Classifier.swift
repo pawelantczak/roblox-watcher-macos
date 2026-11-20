@@ -50,8 +50,7 @@ public struct WatcherClassifier {
     }
     
     /// Identifies event icons on the left UI panel (origin.x < maxNormalizedX).
-    /// If a single line matches, targets its center. If two or more lines match,
-    /// targets the vertical center between first line top and last line bottom.
+    /// Dispatches clicks to the top of the first recognized line of text.
     public static func findEventTarget(
         in items: [DetectedText],
         keywords: [String],
@@ -71,20 +70,24 @@ public struct WatcherClassifier {
         }
         
         guard !matches.isEmpty else { return nil }
-        if matches.count == 1 {
-            return matches[0]
-        }
         
         // Sort lines top-to-bottom (higher y in Vision space = higher on screen)
         let sorted = matches.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
-        let topY = sorted.map { $0.boundingBox.maxY }.max() ?? sorted[0].boundingBox.maxY
-        let bottomY = sorted.map { $0.boundingBox.minY }.min() ?? sorted[0].boundingBox.minY
-        let minX = sorted.map { $0.boundingBox.minX }.min() ?? sorted[0].boundingBox.minX
-        let maxX = sorted.map { $0.boundingBox.maxX }.max() ?? sorted[0].boundingBox.maxX
+        let firstLine = sorted[0]
+        let clickTarget = CGPoint(x: firstLine.boundingBox.midX, y: firstLine.boundingBox.maxY)
+        
+        if matches.count == 1 {
+            return DetectedText(text: matches[0].text, boundingBox: matches[0].boundingBox, targetPoint: clickTarget)
+        }
+        
+        let topY = sorted.map { $0.boundingBox.maxY }.max() ?? firstLine.boundingBox.maxY
+        let bottomY = sorted.map { $0.boundingBox.minY }.min() ?? firstLine.boundingBox.minY
+        let minX = sorted.map { $0.boundingBox.minX }.min() ?? firstLine.boundingBox.minX
+        let maxX = sorted.map { $0.boundingBox.maxX }.max() ?? firstLine.boundingBox.maxX
         
         let combinedBox = CGRect(x: minX, y: bottomY, width: max(0.001, maxX - minX), height: max(0.001, topY - bottomY))
         let combinedText = sorted.map { $0.text }.joined(separator: " ")
-        return DetectedText(text: combinedText, boundingBox: combinedBox)
+        return DetectedText(text: combinedText, boundingBox: combinedBox, targetPoint: clickTarget)
     }
 }
 

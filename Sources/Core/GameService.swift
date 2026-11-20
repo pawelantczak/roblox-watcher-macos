@@ -75,13 +75,13 @@ public struct GameService {
                 if let target = target {
                     let liveWin = WindowService.findRobloxWindow()
                     let currentBounds = liveWin?.bounds ?? winBounds
-                    let targetX = currentBounds.origin.x + Double(target.boundingBox.midX) * currentBounds.width
-                    let targetY = currentBounds.origin.y + (1.0 - Double(target.boundingBox.midY)) * currentBounds.height
+                    let targetX = currentBounds.origin.x + Double(target.clickPoint.x) * currentBounds.width
+                    let targetY = currentBounds.origin.y + (1.0 - Double(target.clickPoint.y)) * currentBounds.height
                     let targetPoint = CGPoint(x: targetX, y: targetY)
                     
                     let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox)
                     
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to text center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to top of first line at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
                     InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text") { msg in
                         logger?(msg, nil)
                     }
@@ -140,17 +140,17 @@ public struct GameService {
             }
             
             if let target = target {
-                let localX = Double(target.boundingBox.midX) * winBounds.width
-                let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
+                let localX = Double(target.clickPoint.x) * winBounds.width
+                let localY = (1.0 - Double(target.clickPoint.y)) * winBounds.height
                 
                 let currentWin = WindowService.findRobloxWindow() ?? liveWin
                 let targetX = currentWin.bounds.origin.x + localX
                 let targetY = currentWin.bounds.origin.y + localY
                 let pt = CGPoint(x: targetX, y: targetY)
-                let norm = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
+                let norm = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
                 
                 onFound?(norm, target.text)
-                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking text center at (\(Int(targetX)), \(Int(targetY)))...")
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking top of first line at (\(Int(targetX)), \(Int(targetY)))...")
                 InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text", logger: logger)
                 return
             }

@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **20% Left-Sidebar Super-Sampling (`VisionService`)**: Added high-resolution 4x super-sampled scanning on the left 20% sidebar to reliably detect small text labels (such as "Pumpkin Tycoon") on low-resolution and non-Retina windows (<900px).
 - **Direct Text-Center Targeting**: Replaced arbitrary fixed `-45px` offsets with deterministic text center targeting: single lines target line center; multi-line matches target the vertical center between the top of the first line and the bottom of the last line.
 
+### Changed
+- **Event Icon Target Top of First Line**: Updated event icon click target calculation in `WatcherClassifier.findEventTarget`, `GameService`, and `WatcherEngine` to target the top edge of the first recognized line of text (`firstLine.boundingBox.maxY` in Vision space / top edge on screen) at its horizontal center, replacing vertical midpoint targeting to land directly adjacent to the event icon graphic.
+
 ### Fixed
 - **Primary Network Interface IP Resolution**: Replaced naive alphabetical interface scanning in `WebServerService.getLocalIP()` with kernel routing table lookup via disconnected UDP probe, resolving the true active default route (`10.0.1.86` on `en6` Ethernet rather than secondary Wi-Fi `10.0.1.68` on `en0`), eliminating asymmetric packet routing and `ERR_CONNECTION_REFUSED` errors on LAN clients.
 - **Remote Browser Loading Fix (SSE to Polling Migration)**: Replaced open-ended streaming Server-Sent Events (`/events`) with standard background short-polling of `/api/state` every 1.5s, allowing Chrome and Safari on remote LAN PCs to complete page download in <20ms, dismiss the tab loading spinner, and receive live updates without socket reset errors or infinite streaming indicators.

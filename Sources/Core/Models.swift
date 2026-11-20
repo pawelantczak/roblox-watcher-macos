@@ -94,10 +94,16 @@ public struct Stats: Codable, Equatable {
 public struct DetectedText: Equatable {
     public let text: String
     public let boundingBox: CGRect // Normalized (0...1) from bottom-left
+    public let targetPoint: CGPoint? // Normalized (0...1) from bottom-left
     
-    public init(text: String, boundingBox: CGRect) {
+    public init(text: String, boundingBox: CGRect, targetPoint: CGPoint? = nil) {
         self.text = text
         self.boundingBox = boundingBox
+        self.targetPoint = targetPoint
+    }
+    
+    public var clickPoint: CGPoint {
+        targetPoint ?? CGPoint(x: boundingBox.midX, y: boundingBox.midY)
     }
 }
 

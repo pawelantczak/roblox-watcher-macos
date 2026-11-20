@@ -47,7 +47,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Filters out non-fatal notification toasts (such as "You've disconnected from Voice Chat") using configurable `ignorePhrases`.
 2. **Reconnection & Teleport**:
    - Dispatches synthesized mouse events via dual-layer window activation (`NSAppleScript` + `NSRunningApplication.activate`).
-   - Targets the exact center of recognized event text (or the vertical midpoint between the first line's top and last line's bottom for multi-line labels), eliminating arbitrary pixel offsets.
+   - Targets the top of the first recognized line of event text (horizontal midpoint and vertical top edge `maxY`), eliminating arbitrary pixel offsets and landing directly at the event button graphic.
    - Utilizes focused 4x super-sampled scanning on the left 20% sidebar to guarantee small label detection on low-resolution windows.
    - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
 3. **Seamless Anti-AFK Keep-Alive**:

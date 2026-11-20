@@ -136,7 +136,7 @@ public class WatcherManager {
                             if let target = target {
                                 if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox) {
                                     self.latestEventCropBase64 = base64
-                                    self.latestEventNormalizedCoords = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
+                                    self.latestEventNormalizedCoords = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
                                     self.latestEventMatchedText = target.text
                                 }
                             } else {
