@@ -23,6 +23,26 @@ Available as both a **Native macOS App with Menu Bar controls** and a lightweigh
 
 ---
 
+## Installation & Gatekeeper (First Launch)
+
+1. Download `Roblox-Watcher-v<version>.zip` from the [Latest Release](https://github.com/pawel-antczak/roblox-watcher/releases/latest).
+2. Double-click to extract **Roblox Watcher.app** and move it into `/Applications`.
+3. If macOS blocks launch because the open-source developer cannot be verified, clear the browser quarantine attribute via Terminal:
+   ```bash
+   xattr -cr "/Applications/Roblox Watcher.app"
+   ```
+   *(Alternatively, go to **System Settings > Privacy & Security**, scroll down to the Security section, and click **Open Anyway**)*.
+
+---
+
+## Permissions
+
+Roblox Watcher requires macOS accessibility and recording permissions to inspect the window and dispatch clicks:
+1. **Screen Recording**: `System Settings > Privacy & Security > Screen & System Audio Recording` -> Enable **Roblox Watcher**.
+2. **Accessibility**: `System Settings > Privacy & Security > Accessibility` -> Enable **Roblox Watcher**.
+
+---
+
 ## Operating Modes
 
 ### 1. Native GUI App (`Roblox Watcher.app`)
@@ -133,26 +153,6 @@ The app automatically generates `config.json` on first run if not present:
   ]
 }
 ```
-
----
-
-## Installation & Gatekeeper (First Launch)
-
-1. Download `Roblox-Watcher-v<version>.zip` from the [Latest Release](https://github.com/pawel-antczak/roblox-watcher/releases/latest).
-2. Double-click to extract **Roblox Watcher.app** and move it into `/Applications`.
-3. If macOS blocks launch because the open-source developer cannot be verified, clear the browser quarantine attribute via Terminal:
-   ```bash
-   xattr -cr "/Applications/Roblox Watcher.app"
-   ```
-   *(Alternatively, go to **System Settings > Privacy & Security**, scroll down to the Security section, and click **Open Anyway**)*.
-
----
-
-## Permissions
-
-Roblox Watcher requires macOS accessibility and recording permissions to inspect the window and dispatch clicks:
-1. **Screen Recording**: `System Settings > Privacy & Security > Screen & System Audio Recording` -> Enable **Roblox Watcher**.
-2. **Accessibility**: `System Settings > Privacy & Security > Accessibility` -> Enable **Roblox Watcher**.
 
 ---
 
