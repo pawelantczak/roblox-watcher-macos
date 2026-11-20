@@ -105,3 +105,17 @@ public struct RobloxWindowInfo: Equatable {
         self.ownerPID = ownerPID
     }
 }
+
+// MARK: - JSONL Log Record Model
+
+public struct LogRecord: Codable, Equatable {
+    public var timestamp: String
+    public var message: String
+    public var eventCropBase64: String?
+    
+    public init(timestamp: String = WindowService.isoTimestamp(), message: String, eventCropBase64: String? = nil) {
+        self.timestamp = timestamp
+        self.message = message
+        self.eventCropBase64 = eventCropBase64
+    }
+}

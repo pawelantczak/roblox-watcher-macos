@@ -32,15 +32,18 @@ public struct StorageService {
     }
     
     public static func getLogFileURL() -> URL {
-        return getStorageDirectory().appendingPathComponent("watcher.log")
+        return getStorageDirectory().appendingPathComponent("watcher.jsonl")
     }
     
     private static let logFileQueue = DispatchQueue(label: "xyz.ps99clan.robloxwatcher.logqueue")
     
-    public static func appendLogToFile(_ line: String) {
+    public static func appendLogToFile(_ line: String, eventCropBase64: String? = nil) {
         logFileQueue.async {
             let fileURL = getLogFileURL()
-            let logLine = line + "\n"
+            let record = LogRecord(message: line, eventCropBase64: eventCropBase64)
+            guard let jsonData = try? JSONEncoder().encode(record),
+                  let jsonString = String(data: jsonData, encoding: .utf8) else { return }
+            let logLine = jsonString + "\n"
             if let data = logLine.data(using: .utf8) {
                 if FileManager.default.fileExists(atPath: fileURL.path) {
                     if let handle = try? FileHandle(forWritingTo: fileURL) {

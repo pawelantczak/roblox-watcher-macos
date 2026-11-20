@@ -116,4 +116,13 @@ public struct VisionService {
         guard let jpegData = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.65]) else { return nil }
         return jpegData.base64EncodedString()
     }
+    
+    public static func cropBase64(from image: CGImage, boundingBox: CGRect) -> String? {
+        let localX = Double(boundingBox.midX) * Double(image.width)
+        let localY = (1.0 - Double(boundingBox.midY)) * Double(image.height)
+        let cropRect = CGRect(x: max(0, localX - 60), y: max(0, localY - 60), width: 120, height: 120)
+        guard let cropped = image.cropping(to: cropRect) else { return nil }
+        let rep = NSBitmapImageRep(cgImage: cropped)
+        return rep.representation(using: .png, properties: [:])?.base64EncodedString()
+    }
 }

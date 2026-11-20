@@ -82,13 +82,15 @@ public class NativeBridgeHandler: NSObject, WKScriptMessageHandler {
             DispatchQueue.main.async {
                 let panel = NSSavePanel()
                 panel.title = "Save Full Roblox Watcher Log"
-                panel.nameFieldStringValue = "roblox-watcher.log"
+                panel.nameFieldStringValue = "roblox-watcher.jsonl"
                 panel.canCreateDirectories = true
                 panel.begin { response in
                     guard response == .OK, let targetURL = panel.url else { return }
                     if !StorageService.exportLogFile(to: targetURL) {
-                        let text = WatcherManager.shared.logs.joined(separator: "\n") + "\n"
-                        try? text.write(to: targetURL, atomically: true, encoding: .utf8)
+                        let lines = WatcherManager.shared.logs.compactMap {
+                            (try? JSONEncoder().encode(LogRecord(message: $0))).flatMap { String(data: $0, encoding: .utf8) }
+                        }.joined(separator: "\n") + "\n"
+                        try? lines.write(to: targetURL, atomically: true, encoding: .utf8)
                     }
                     WatcherManager.shared.appendLog("\(WindowService.logTimestamp()) [System] Full log exported to: \(targetURL.lastPathComponent)")
                 }

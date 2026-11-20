@@ -12,6 +12,11 @@ public struct WindowService {
         return "[\(df.string(from: Date()))]"
     }
     
+    public static func isoTimestamp() -> String {
+        let df = ISO8601DateFormatter()
+        return df.string(from: Date())
+    }
+    
     public static func findRobloxProcess() -> (pid: pid_t, placeId: String?)? {
         let task = Process()
         task.launchPath = "/usr/bin/pgrep"

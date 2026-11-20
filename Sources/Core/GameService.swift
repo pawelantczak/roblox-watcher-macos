@@ -52,10 +52,10 @@ public struct GameService {
         screenshotPath: String,
         targetKeywords: [String],
         maxWaitSeconds: Int = 50,
-        logger: ((String) -> Void)? = nil
+        logger: ((String, String?) -> Void)? = nil
     ) {
         let keywordsDisplay = targetKeywords.joined(separator: ", ")
-        logger?("\n\(WindowService.logTimestamp()) [Event Nav] Waiting for game to load before teleporting (targets: [\(keywordsDisplay)])...")
+        logger?("\n\(WindowService.logTimestamp()) [Event Nav] Waiting for game to load before teleporting (targets: [\(keywordsDisplay)])...", nil)
         
         let startTime = Date()
         while Date().timeIntervalSince(startTime) < Double(maxWaitSeconds) {
@@ -79,19 +79,34 @@ public struct GameService {
                     let targetY = currentBounds.origin.y + (1.0 - Double(target.boundingBox.midY)) * currentBounds.height
                     let targetPoint = CGPoint(x: targetX, y: targetY)
                     
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to text center at (\(Int(targetX)), \(Int(targetY)))...")
-                    InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text", logger: logger)
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Teleport dispatched successfully!\n")
+                    let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox)
+                    
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to text center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                    InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text") { msg in
+                        logger?(msg, nil)
+                    }
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Teleport dispatched successfully!\n", nil)
                     foundAndClicked = true
                 }
             }
             if foundAndClicked { return }
             
             let elapsed = Int(Date().timeIntervalSince(startTime))
-            logger?("[Event Nav] Waiting for event icon [\(keywordsDisplay)] to appear (\(elapsed)/\(maxWaitSeconds)s)...")
+            logger?("[Event Nav] Waiting for event icon [\(keywordsDisplay)] to appear (\(elapsed)/\(maxWaitSeconds)s)...", nil)
         }
         
-        logger?("\n\(WindowService.logTimestamp()) [Event Nav] Timeout: Event icon [\(keywordsDisplay)] not detected on Roblox window. Skipping click to prevent accidental inputs.\n")
+        logger?("\n\(WindowService.logTimestamp()) [Event Nav] Timeout: Event icon [\(keywordsDisplay)] not detected on Roblox window. Skipping click to prevent accidental inputs.\n", nil)
+    }
+    
+    public static func teleportToEventArea(
+        screenshotPath: String,
+        targetKeywords: [String],
+        maxWaitSeconds: Int = 50,
+        logger: ((String) -> Void)?
+    ) {
+        teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: targetKeywords, maxWaitSeconds: maxWaitSeconds) { msg, _ in
+            logger?(msg)
+        }
     }
     
     public static func executeManualEventClick(

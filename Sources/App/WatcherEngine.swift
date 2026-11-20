@@ -28,13 +28,13 @@ public class WatcherManager {
         lastKnownPlaceId = config.placeId
     }
     
-    public func appendLog(_ line: String) {
+    public func appendLog(_ line: String, eventCropBase64: String? = nil) {
         let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
         logLock.lock()
         logs.append(trimmed)
         if logs.count > 200 { logs.removeFirst() }
         logLock.unlock()
-        StorageService.appendLogToFile(trimmed)
+        StorageService.appendLogToFile(trimmed, eventCropBase64: eventCropBase64)
     }
     
     public func clearLogs() {
@@ -134,16 +134,10 @@ public class WatcherManager {
                                 target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: config.eventTargetKeywords)
                             }
                             if let target = target {
-                                let localX = Double(target.boundingBox.midX) * winBounds.width
-                                let localY = (1.0 - Double(target.boundingBox.midY)) * winBounds.height
-                                let cropRect = CGRect(x: max(0, localX - 60), y: max(0, localY - 60), width: 120, height: 120)
-                                if let cropped = screenImage.cropping(to: cropRect) {
-                                    let rep = NSBitmapImageRep(cgImage: cropped)
-                                    if let png = rep.representation(using: .png, properties: [:]) {
-                                        self.latestEventCropBase64 = png.base64EncodedString()
-                                        self.latestEventNormalizedCoords = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
-                                        self.latestEventMatchedText = target.text
-                                    }
+                                if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox) {
+                                    self.latestEventCropBase64 = base64
+                                    self.latestEventNormalizedCoords = CGPoint(x: target.boundingBox.midX, y: 1.0 - target.boundingBox.midY)
+                                    self.latestEventMatchedText = target.text
                                 }
                             } else {
                                 (self.latestEventCropBase64, self.latestEventNormalizedCoords, self.latestEventMatchedText) = (nil, nil, nil)
@@ -198,8 +192,8 @@ public class WatcherManager {
                                     self.appendLog(msg)
                                 }
                                 if config.autoTeleportToEvent {
-                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { msg in
-                                        self.appendLog(msg)
+                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { msg, crop in
+                                        self.appendLog(msg, eventCropBase64: crop)
                                     }
                                 }
                             } else if config.autoRelaunchOnKick {
@@ -208,7 +202,9 @@ public class WatcherManager {
                                     self.appendLog(msg)
                                 }
                                 if config.autoTeleportToEvent {
-                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { self.appendLog($0) }
+                                    GameService.teleportToEventArea(screenshotPath: screenshotPath, targetKeywords: config.eventTargetKeywords) { msg, crop in
+                                        self.appendLog(msg, eventCropBase64: crop)
+                                    }
                                 }
                             }
                         } else {

@@ -17,7 +17,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
     - `VisionService.swift`: Screen capture and on-device Apple Vision OCR.
     - `InputService.swift`: Synthetic mouse events, hardware warping, and Anti-AFK engine.
     - `GameService.swift`: Game relaunching and event area navigation workflows.
-    - `StorageService.swift`: Deterministic JSON persistence, log file persistence, and version resolution.
+    - `StorageService.swift`: Deterministic JSON persistence, structured JSONL log persistence with base64 event crop embedding, and version resolution.
     - `LockManager.swift`: POSIX advisory kernel lock (`flock`) engine.
     - `PowerService.swift`: IOKit `IOPMAssertion` display sleep and auto-lock prevention engine.
     - `UpdateService.swift`: Asynchronous GitHub Releases API update checker and semver engine.

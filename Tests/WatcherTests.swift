@@ -269,17 +269,26 @@ func testUpdateServiceSemverComparison() {
 func testLogPersistence() {
     print("▶ Running: testLogPersistence")
     let logUrl = StorageService.getLogFileURL()
-    assertTrue(logUrl.path.hasSuffix("watcher.log"))
+    assertTrue(logUrl.path.hasSuffix("watcher.jsonl"))
     
     let testLine = "[Test] Persistent log verification \(UUID().uuidString)"
-    StorageService.appendLogToFile(testLine)
+    let testBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    StorageService.appendLogToFile(testLine, eventCropBase64: testBase64)
     Thread.sleep(forTimeInterval: 0.15)
     
     let content = (try? String(contentsOf: logUrl, encoding: .utf8)) ?? ""
-    assertTrue(content.contains(testLine), "Expected watcher.log to contain written log line")
+    assertTrue(content.contains(testLine), "Expected watcher.jsonl to contain written log line")
+    assertTrue(content.contains(testBase64), "Expected watcher.jsonl to contain event crop base64")
+    
+    // Verify JSON parsing of the logged line
+    let matchingLine = content.components(separatedBy: "\n").filter { $0.contains(testLine) }.last ?? ""
+    let record = try? JSONDecoder().decode(LogRecord.self, from: Data(matchingLine.utf8))
+    assertTrue(record != nil, "Expected matching line in watcher.jsonl to parse as valid LogRecord")
+    assertEqual(record?.message, testLine)
+    assertEqual(record?.eventCropBase64, testBase64)
     
     // Verify exportLogFile copies the full file
-    let tempExportURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_export_\(UUID().uuidString).log")
+    let tempExportURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_export_\(UUID().uuidString).jsonl")
     let exportSuccess = StorageService.exportLogFile(to: tempExportURL)
     assertTrue(exportSuccess, "Expected exportLogFile to succeed")
     let exportedContent = (try? String(contentsOf: tempExportURL, encoding: .utf8)) ?? ""
