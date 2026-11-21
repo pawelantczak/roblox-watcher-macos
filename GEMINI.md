@@ -48,9 +48,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Filters out non-fatal notification toasts (such as "You've disconnected from Voice Chat") using configurable `ignorePhrases`.
 2. **Reconnection & Teleport**:
    - Dispatches synthesized mouse events via dual-layer window activation (`NSRunningApplication.activate` by bundle ID `com.roblox.RobloxPlayer` + AppleScript fallback).
-   - Targets the top of the first recognized line of event text (horizontal midpoint and vertical top edge `maxY`), eliminating arbitrary pixel offsets and landing directly at the event button graphic.
-   - Utilizes focused 4x super-sampled scanning on the left 20% sidebar to guarantee small label detection on low-resolution windows.
-   - Scans and verifies target event keywords (`pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
+   - Dynamically calculates the exact center of the event button graphic directly above the recognized event label, utilizing sub-word bounding box isolation to separate adjacent buttons (e.g. side-by-side "Turkey Hunt" and "Leagues" on wide screens) and centering event log crops on the full icon.
+   - Utilizes focused 4x super-sampled scanning on the left 20% sidebar and fuzzy token matching with Levenshtein edit distance to tolerate stylized font OCR misreadings (e.g. "Turkcy" or "Hung" for Turkey Hunt), guaranteeing button detection on low-resolution windows.
+   - Scans and verifies target event keywords (`turkey`, `hunt`, `pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
 3. **Seamless Anti-AFK Keep-Alive**:
    - Delivers a focus click followed by a native Spacebar key event (`kVK_Space`, character jump) with randomized spatial jitter (`±8px`) to the Roblox window every 10 minutes (configurable 1m–19m via live dashboard input) using a Focus-Click-Space-Restore sequence.
    - Momentarily focuses Roblox so `UserInputService` accepts the jump input to reset the 20-minute idle kick timer without accidental clicks on viewport UI elements or pets, then instantly restores previous application focus and returns the hardware cursor to its original position.

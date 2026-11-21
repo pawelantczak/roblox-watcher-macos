@@ -27,7 +27,7 @@ public struct VisionService {
                 return nil
             }
         }
-        
+         
         try? task.run()
         task.waitUntilExit()
         
@@ -47,7 +47,8 @@ public struct VisionService {
             guard let observations = req.results as? [VNRecognizedTextObservation] else { return }
             for obs in observations {
                 if let topCandidate = obs.topCandidates(1).first {
-                    detected.append(DetectedText(text: topCandidate.string, boundingBox: obs.boundingBox))
+                    let words = extractWordBoxes(from: obs, candidate: topCandidate)
+                    detected.append(DetectedText(text: topCandidate.string, boundingBox: obs.boundingBox, wordBoxes: words))
                 }
             }
         }
@@ -91,7 +92,13 @@ public struct VisionService {
                 let mappedX = (obs.boundingBox.origin.x * CGFloat(sidebarWidth)) / CGFloat(image.width)
                 let mappedW = (obs.boundingBox.size.width * CGFloat(sidebarWidth)) / CGFloat(image.width)
                 let fullBox = CGRect(x: mappedX, y: obs.boundingBox.origin.y, width: mappedW, height: obs.boundingBox.size.height)
-                detected.append(DetectedText(text: top.string, boundingBox: fullBox))
+                let words = extractWordBoxes(
+                    from: obs,
+                    candidate: top,
+                    transformX: { ($0 * CGFloat(sidebarWidth)) / CGFloat(image.width) },
+                    transformW: { ($0 * CGFloat(sidebarWidth)) / CGFloat(image.width) }
+                )
+                detected.append(DetectedText(text: top.string, boundingBox: fullBox, wordBoxes: words))
             }
         }
         req.recognitionLevel = .accurate
@@ -100,6 +107,36 @@ public struct VisionService {
         let handler = VNImageRequestHandler(cgImage: upscaled, options: [:])
         try? handler.perform([req])
         return detected
+    }
+    
+    private static func extractWordBoxes(
+        from observation: VNRecognizedTextObservation,
+        candidate: VNRecognizedText,
+        transformX: ((CGFloat) -> CGFloat)? = nil,
+        transformW: ((CGFloat) -> CGFloat)? = nil
+    ) -> [DetectedWord] {
+        let string = candidate.string
+        let words = string.components(separatedBy: .whitespacesAndNewlines)
+        guard words.count > 1 else {
+            let b = observation.boundingBox
+            let fx = transformX?(b.origin.x) ?? b.origin.x
+            let fw = transformW?(b.size.width) ?? b.size.width
+            return [DetectedWord(word: string, boundingBox: CGRect(x: fx, y: b.origin.y, width: fw, height: b.size.height))]
+        }
+        var wordBoxes: [DetectedWord] = []
+        var searchStart = string.startIndex
+        for w in words where !w.isEmpty {
+            if let range = string.range(of: w, range: searchStart..<string.endIndex) {
+                if let box = try? candidate.boundingBox(for: range) {
+                    let b = box.boundingBox
+                    let fx = transformX?(b.origin.x) ?? b.origin.x
+                    let fw = transformW?(b.size.width) ?? b.size.width
+                    wordBoxes.append(DetectedWord(word: w, boundingBox: CGRect(x: fx, y: b.origin.y, width: fw, height: b.size.height)))
+                }
+                searchStart = range.upperBound
+            }
+        }
+        return wordBoxes.isEmpty ? [DetectedWord(word: string, boundingBox: observation.boundingBox)] : wordBoxes
     }
     
     public static func createThumbnailBase64(from imageURL: URL, maxDimension: CGFloat = 960) -> String? {

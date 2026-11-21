@@ -333,7 +333,7 @@
 
         <div>
           <label class="block text-slate-400 mb-1">Event Target Keywords (comma separated)</label>
-          <input type="text" id="cfgEventKeywords" placeholder="e.g. event, tycoon, winter" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
+          <input type="text" id="cfgEventKeywords" placeholder="e.g. turkey, hunt, pumpkin, tycoon" class="w-full bg-dark-950 border border-slate-700/80 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-cyan-400 text-xs" />
         </div>
 
         <div>
@@ -875,7 +875,7 @@
       document.getElementById('cfgPlaceId').value = cfg.placeId ?? '';
       document.getElementById('cfgVipUrl').value = cfg.vipServerUrl ?? '';
       document.getElementById('cfgButtonText').value = cfg.reconnectButtonText ?? 'Reconnect';
-      document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['pumpkin', 'tycoon']).join(', ');
+      document.getElementById('cfgEventKeywords').value = (cfg.eventTargetKeywords ?? ['turkey', 'hunt', 'pumpkin', 'tycoon']).join(', ');
       document.getElementById('cfgDisconnectKeywords').value = (cfg.disconnectKeywords ?? []).join('\n');
       document.getElementById('cfgIgnorePhrases').value = (cfg.ignorePhrases ?? ['voice chat', 'voice']).join(', ');
       const webServerCheckbox = document.getElementById('cfgWebServer');

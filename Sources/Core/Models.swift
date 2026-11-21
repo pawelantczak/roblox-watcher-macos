@@ -30,6 +30,8 @@ public struct Config: Codable, Equatable {
         "connection closed"
     ]
     public var eventTargetKeywords: [String] = [
+        "turkey",
+        "hunt",
         "pumpkin",
         "tycoon"
     ]
@@ -69,7 +71,7 @@ public struct Config: Codable, Equatable {
             "server was shut down", "server has closed", "please reconnect",
             "connection lost", "connection closed"
         ]
-        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["pumpkin", "tycoon"]
+        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["turkey", "hunt", "pumpkin", "tycoon"]
         ignorePhrases = try container.decodeIfPresent([String].self, forKey: .ignorePhrases) ?? ["voice chat", "voice"]
         webServerEnabled = try container.decodeIfPresent(Bool.self, forKey: .webServerEnabled) ?? false
         webServerPort = try container.decodeIfPresent(Int.self, forKey: .webServerPort) ?? 8765
@@ -91,15 +93,29 @@ public struct Stats: Codable, Equatable {
 
 // MARK: - Vision OCR & Window Entities
 
+public struct DetectedWord: Equatable {
+    public let word: String
+    public let boundingBox: CGRect // Normalized (0...1) from bottom-left
+    
+    public init(word: String, boundingBox: CGRect) {
+        self.word = word
+        self.boundingBox = boundingBox
+    }
+}
+
 public struct DetectedText: Equatable {
     public let text: String
     public let boundingBox: CGRect // Normalized (0...1) from bottom-left
     public let targetPoint: CGPoint? // Normalized (0...1) from bottom-left
+    public let wholeIconBox: CGRect? // Normalized (0...1) from bottom-left
+    public let wordBoxes: [DetectedWord]
     
-    public init(text: String, boundingBox: CGRect, targetPoint: CGPoint? = nil) {
+    public init(text: String, boundingBox: CGRect, targetPoint: CGPoint? = nil, wholeIconBox: CGRect? = nil, wordBoxes: [DetectedWord] = []) {
         self.text = text
         self.boundingBox = boundingBox
         self.targetPoint = targetPoint
+        self.wholeIconBox = wholeIconBox
+        self.wordBoxes = wordBoxes
     }
     
     public var clickPoint: CGPoint {

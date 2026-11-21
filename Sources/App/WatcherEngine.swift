@@ -134,7 +134,7 @@ public class WatcherManager {
                                 target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: config.eventTargetKeywords)
                             }
                             if let target = target {
-                                if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox) {
+                                if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox) {
                                     self.latestEventCropBase64 = base64
                                     self.latestEventNormalizedCoords = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
                                     self.latestEventMatchedText = target.text

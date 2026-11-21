@@ -161,17 +161,57 @@ func testEventTargetDetectionBoundingBox() {
     assertEqual(detectedLeft?.boundingBox.midX, 0.10)
     assertEqual(detectedLeft?.boundingBox.midY, 0.54)
     assertEqual(detectedLeft?.clickPoint.x, 0.10)
-    assertEqual(detectedLeft?.clickPoint.y, 0.58) // Top of first line (maxY)
+    // Icon graphic center is directly above text (maxY: 0.58 + 1.25 * height: 0.08 = 0.68)
+    assertEqual(Double(round(detectedLeft!.clickPoint.y * 100) / 100), 0.68)
+    assertTrue(detectedLeft?.wholeIconBox != nil, "Expected whole icon bounding box")
+    assertEqual(Double(round(detectedLeft!.wholeIconBox!.minY * 100) / 100), 0.50)
+    assertEqual(Double(round(detectedLeft!.wholeIconBox!.maxY * 100) / 100), 0.78)
     
-    // Multi-line detection: target top of first recognized line
-    let line1 = DetectedText(text: "Pumpkin", boundingBox: CGRect(x: 0.05, y: 0.52, width: 0.08, height: 0.04)) // maxY: 0.56
+    // Multi-line detection: target center of icon graphic above first line
+    let line1 = DetectedText(text: "Pumpkin", boundingBox: CGRect(x: 0.05, y: 0.52, width: 0.08, height: 0.04)) // maxY: 0.56, h: 0.04
     let line2 = DetectedText(text: "Tycoon", boundingBox: CGRect(x: 0.06, y: 0.46, width: 0.06, height: 0.04))  // minY: 0.46
     let multiDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: cfg.eventTargetKeywords)
     assertTrue(multiDetected != nil, "Expected multi-line event target to be detected")
     assertEqual(multiDetected?.text, "Pumpkin Tycoon")
-    assertEqual(Double(multiDetected!.boundingBox.midY), 0.51) // Combined box center for crop preview
     assertEqual(multiDetected?.clickPoint.x, 0.09) // MidX of first line
-    assertEqual(multiDetected?.clickPoint.y, 0.56) // Top of first line (maxY of line1)
+    // Icon center: line1.maxY (0.56) + 1.0 * totalHeight (0.10) = 0.66
+    assertEqual(Double(round(multiDetected!.clickPoint.y * 100) / 100), 0.66)
+    
+    // Single-line Turkey Hunt detection with dynamic icon centering
+    let turkeySingle = DetectedText(text: "Turkey Hunt", boundingBox: CGRect(x: 0.06, y: 0.38, width: 0.06, height: 0.02)) // maxY: 0.40, h: 0.02
+    let turkeyDetected = WatcherClassifier.findEventTarget(in: [turkeySingle], keywords: ["turkey", "hunt"])
+    assertTrue(turkeyDetected != nil, "Expected Turkey Hunt to be detected")
+    assertEqual(turkeyDetected?.clickPoint.x, 0.09)
+    // Icon center: maxY (0.40) + 1.25 * h (0.02) = 0.425
+    assertEqual(Double(round(turkeyDetected!.clickPoint.y * 1000) / 1000), 0.425)
+    
+    // Substring separation test: adjacent 'Leagues' label on same horizontal line
+    let wordTurkey = DetectedWord(word: "Turkey", boundingBox: CGRect(x: 0.01, y: 0.38, width: 0.03, height: 0.02))
+    let wordHung = DetectedWord(word: "Hung", boundingBox: CGRect(x: 0.045, y: 0.38, width: 0.025, height: 0.02))
+    let wordLeagues = DetectedWord(word: "Leagues", boundingBox: CGRect(x: 0.08, y: 0.38, width: 0.04, height: 0.02))
+    let combinedLine = DetectedText(
+        text: "Turkey Hung Leagues",
+        boundingBox: CGRect(x: 0.01, y: 0.38, width: 0.11, height: 0.02),
+        wordBoxes: [wordTurkey, wordHung, wordLeagues]
+    )
+    let isolatedTarget = WatcherClassifier.findEventTarget(in: [combinedLine], keywords: ["turkey hunt"])
+    assertTrue(isolatedTarget != nil, "Expected token-based match for 'turkey hunt' in 'Turkey Hung Leagues'")
+    assertEqual(isolatedTarget?.text, "Turkey Hung")
+    // Click X should center on the isolated keyword words (0.01..0.07 -> 0.04), NOT on combined with Leagues (0.065)
+    assertEqual(Double(round(isolatedTarget!.clickPoint.x * 100) / 100), 0.04)
+    
+    // Fuzzy OCR matching with stylized font misreadings from live game screen ("Turkcy Hung Loagues")
+    let wordTurkcy = DetectedWord(word: "Turkcy", boundingBox: CGRect(x: 0.01, y: 0.38, width: 0.03, height: 0.02))
+    let wordLoagues = DetectedWord(word: "Loagues", boundingBox: CGRect(x: 0.08, y: 0.38, width: 0.04, height: 0.02))
+    let liveOcrLine = DetectedText(
+        text: "Turkcy Hung Loagues",
+        boundingBox: CGRect(x: 0.01, y: 0.38, width: 0.11, height: 0.02),
+        wordBoxes: [wordTurkcy, wordHung, wordLoagues]
+    )
+    let fuzzyTarget = WatcherClassifier.findEventTarget(in: [liveOcrLine], keywords: ["turkey hunt"])
+    assertTrue(fuzzyTarget != nil, "Expected fuzzy match for 'turkey hunt' in live OCR line 'Turkcy Hung Loagues'")
+    assertEqual(fuzzyTarget?.text, "Turkcy Hung")
+    assertEqual(Double(round(fuzzyTarget!.clickPoint.x * 100) / 100), 0.04)
     
     // If only right-side target exists, it should be ignored
     let detectedRight = WatcherClassifier.findEventTarget(in: [rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)
@@ -332,6 +372,33 @@ func testWebServerService() {
     assertFalse(server.isRunning, "Expected WebServer to be stopped")
 }
 
+func testFuzzyOcrMatching() {
+    print("▶ Running: testFuzzyOcrMatching")
+    // Target token: turkey
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Turkcy", targetToken: "turkey"), "Turkcy should match turkey")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Tuntcy", targetToken: "turkey"), "Tuntcy should match turkey")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Turkoy", targetToken: "turkey"), "Turkoy should match turkey")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "turkay", targetToken: "turkey"), "turkay should match turkey")
+    
+    // Target token: hunt
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Hung", targetToken: "hunt"), "Hung should match hunt")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Hun?", targetToken: "hunt"), "Hun? should match hunt")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Hunc", targetToken: "hunt"), "Hunc should match hunt")
+    
+    // Multi-line event tokens
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Purpkin", targetToken: "pumpkin"), "Purpkin should match pumpkin")
+    assertTrue(WatcherClassifier.wordMatches(ocrWord: "Tycoom", targetToken: "tycoon"), "Tycoom should match tycoon")
+    
+    // Negative cases - unrelated UI elements must not match
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "Leagues", targetToken: "turkey"), "Leagues must not match turkey")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "Loagues", targetToken: "hunt"), "Loagues must not match hunt")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "Merchant", targetToken: "turkey"), "Merchant must not match turkey")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "AutoHunt", targetToken: "hunt"), "AutoHunt must not match hunt")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "FREE", targetToken: "turkey"), "FREE must not match turkey")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "HUGE", targetToken: "hunt"), "HUGE must not match hunt")
+    assertFalse(WatcherClassifier.wordMatches(ocrWord: "Rewards", targetToken: "turkey"), "Rewards must not match turkey")
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -347,6 +414,7 @@ struct TestRunner {
         testVoiceChatNonFatalIgnoreFilter()
         testReconnectButtonDetection()
         testEventTargetDetectionBoundingBox()
+        testFuzzyOcrMatching()
         testPlaceIdParsing()
         testAntiAfkCountdownFormatting()
         testSingleInstanceKernelLock()

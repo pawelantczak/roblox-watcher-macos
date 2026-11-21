@@ -79,9 +79,9 @@ public struct GameService {
                     let targetY = currentBounds.origin.y + (1.0 - Double(target.clickPoint.y)) * currentBounds.height
                     let targetPoint = CGPoint(x: targetX, y: targetY)
                     
-                    let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox)
+                    let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox)
                     
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to top of first line at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to icon center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
                     InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text") { msg in
                         logger?(msg, nil)
                     }
@@ -148,10 +148,10 @@ public struct GameService {
                 let targetY = currentWin.bounds.origin.y + localY
                 let pt = CGPoint(x: targetX, y: targetY)
                 let norm = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
-                let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox)
+                let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox)
                 
                 onFound?(norm, target.text)
-                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking top of first line at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking icon center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
                 InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text") { msg in
                     logger?(msg, nil)
                 }
