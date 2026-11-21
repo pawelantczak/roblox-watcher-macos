@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Test Click Screenshot Logging**: Clicking "Test Click" now automatically logs the recognized event icon picture to your session activity log alongside the click action.
+
+### Fixed
+- **Clean Activity Logs**: Prevented automated test runs from injecting placeholder records into your live activity log files.
+
 ---
 
 ## [1.3.0] - 2026-11-20

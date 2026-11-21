@@ -111,12 +111,12 @@ public struct GameService {
     
     public static func executeManualEventClick(
         keywords: [String],
-        logger: ((String) -> Void)? = nil,
+        logger: ((String, String?) -> Void)? = nil,
         onFound: ((CGPoint, String) -> Void)? = nil
     ) {
         if !AXIsProcessTrusted() {
-            logger?("\(WindowService.logTimestamp()) [ALERT] macOS Accessibility permission is missing for Roblox Watcher!")
-            logger?("\(WindowService.logTimestamp()) [Action] Opening System Settings > Accessibility. Please enable Roblox Watcher.")
+            logger?("\(WindowService.logTimestamp()) [ALERT] macOS Accessibility permission is missing for Roblox Watcher!", nil)
+            logger?("\(WindowService.logTimestamp()) [Action] Opening System Settings > Accessibility. Please enable Roblox Watcher.", nil)
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
             _ = AXIsProcessTrustedWithOptions(options)
             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
@@ -126,7 +126,7 @@ public struct GameService {
         }
         
         guard let liveWin = WindowService.findRobloxWindow() else {
-            logger?("\(WindowService.logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.")
+            logger?("\(WindowService.logTimestamp()) [Error] Roblox window not found on screen. Bring Roblox into view.", nil)
             return
         }
         
@@ -148,15 +148,26 @@ public struct GameService {
                 let targetY = currentWin.bounds.origin.y + localY
                 let pt = CGPoint(x: targetX, y: targetY)
                 let norm = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
+                let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.boundingBox)
                 
                 onFound?(norm, target.text)
-                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking top of first line at (\(Int(targetX)), \(Int(targetY)))...")
-                InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text", logger: logger)
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking top of first line at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text") { msg in
+                    logger?(msg, nil)
+                }
                 return
             }
         }
         
         let kwList = keywords.joined(separator: ", ")
-        logger?("\(WindowService.logTimestamp()) [Warning] Event icon matching [\(kwList)] not detected on screen. No click dispatched.")
+        logger?("\(WindowService.logTimestamp()) [Warning] Event icon matching [\(kwList)] not detected on screen. No click dispatched.", nil)
+    }
+    
+    public static func executeManualEventClick(
+        keywords: [String],
+        logger: ((String) -> Void)?,
+        onFound: ((CGPoint, String) -> Void)? = nil
+    ) {
+        executeManualEventClick(keywords: keywords, logger: { msg, _ in logger?(msg) }, onFound: onFound)
     }
 }

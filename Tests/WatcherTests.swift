@@ -273,8 +273,15 @@ func testUpdateServiceSemverComparison() {
 
 func testLogPersistence() {
     print("▶ Running: testLogPersistence")
+    let tempLogURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("test_log_\(UUID().uuidString).jsonl")
+    StorageService.customLogFileURL = tempLogURL
+    defer {
+        StorageService.customLogFileURL = nil
+        try? FileManager.default.removeItem(at: tempLogURL)
+    }
+    
     let logUrl = StorageService.getLogFileURL()
-    assertTrue(logUrl.path.hasSuffix("watcher.jsonl"))
+    assertTrue(logUrl.path.hasSuffix(".jsonl"))
     
     let testLine = "[Test] Persistent log verification \(UUID().uuidString)"
     let testBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
@@ -282,13 +289,13 @@ func testLogPersistence() {
     Thread.sleep(forTimeInterval: 0.15)
     
     let content = (try? String(contentsOf: logUrl, encoding: .utf8)) ?? ""
-    assertTrue(content.contains(testLine), "Expected watcher.jsonl to contain written log line")
-    assertTrue(content.contains(testBase64), "Expected watcher.jsonl to contain event crop base64")
+    assertTrue(content.contains(testLine), "Expected test log to contain written log line")
+    assertTrue(content.contains(testBase64), "Expected test log to contain event crop base64")
     
     // Verify JSON parsing of the logged line
     let matchingLine = content.components(separatedBy: "\n").filter { $0.contains(testLine) }.last ?? ""
     let record = try? JSONDecoder().decode(LogRecord.self, from: Data(matchingLine.utf8))
-    assertTrue(record != nil, "Expected matching line in watcher.jsonl to parse as valid LogRecord")
+    assertTrue(record != nil, "Expected matching line in test log to parse as valid LogRecord")
     assertEqual(record?.message, testLine)
     assertEqual(record?.eventCropBase64, testBase64)
     

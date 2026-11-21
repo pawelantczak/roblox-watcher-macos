@@ -31,8 +31,10 @@ public struct StorageService {
         return getStorageDirectory().appendingPathComponent("latest_capture.png")
     }
     
+    public static var customLogFileURL: URL? = nil
+    
     public static func getLogFileURL() -> URL {
-        return getStorageDirectory().appendingPathComponent("watcher.jsonl")
+        return customLogFileURL ?? getStorageDirectory().appendingPathComponent("watcher.jsonl")
     }
     
     private static let logFileQueue = DispatchQueue(label: "xyz.ps99clan.robloxwatcher.logqueue")

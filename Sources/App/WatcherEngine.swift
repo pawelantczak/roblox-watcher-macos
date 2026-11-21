@@ -81,7 +81,7 @@ public class WatcherManager {
             self.appendLog("\(WindowService.logTimestamp()) [Action] Manual test teleport triggered...")
             GameService.executeManualEventClick(
                 keywords: self.config.eventTargetKeywords,
-                logger: { self.appendLog($0) },
+                logger: { msg, crop in self.appendLog(msg, eventCropBase64: crop) },
                 onFound: { self.latestEventNormalizedCoords = $0; self.latestEventMatchedText = $1 }
             )
         }
