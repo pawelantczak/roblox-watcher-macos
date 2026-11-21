@@ -9,6 +9,16 @@ if [ -f "$DIR/VERSION" ]; then
     VERSION=$(cat "$DIR/VERSION" | tr -d '[:space:]')
 fi
 
+# Build number based on timestamp
+BUILD_NUMBER=$(date +"%Y-%m-%d %H:%M:%S")
+
+# Determine whether this is a pipeline (CI / GitHub Actions) build or local build
+if [ "$GITHUB_ACTIONS" = "true" ] || [ "$CI" = "true" ] || [ "$1" = "--release" ] || [ "$1" = "--ci" ]; then
+    DISPLAY_VERSION="$VERSION"
+else
+    DISPLAY_VERSION="${VERSION}+${BUILD_NUMBER}"
+fi
+
 # Stamp version into Resources/Info.plist
 plutil -replace CFBundleShortVersionString -string "$VERSION" "$DIR/Resources/Info.plist"
 plutil -replace CFBundleVersion -string "$VERSION" "$DIR/Resources/Info.plist"
@@ -31,7 +41,7 @@ fi
 clean_artifacts
 
 echo "=========================================="
-echo "    Building Roblox Watcher Suite v$VERSION"
+echo "    Building Roblox Watcher Suite v$DISPLAY_VERSION"
 echo "=========================================="
 
 # 0. Run Automated Unit Test Suite
@@ -90,9 +100,9 @@ mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 # Copy Plist & Assets
 cp "$DIR/Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
 plutil -replace CFBundleShortVersionString -string "$VERSION" "$CONTENTS_DIR/Info.plist"
-plutil -replace CFBundleVersion -string "$VERSION" "$CONTENTS_DIR/Info.plist"
+plutil -replace CFBundleVersion -string "$BUILD_NUMBER" "$CONTENTS_DIR/Info.plist"
 
-cp "$DIR/VERSION" "$RESOURCES_DIR/VERSION"
+echo "$DISPLAY_VERSION" > "$RESOURCES_DIR/VERSION"
 cp "$DIR/Resources/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 cp "$DIR/Resources/app_icon.png" "$RESOURCES_DIR/app_icon.png"
 cp "$DIR/Resources/menubar_active.png" "$RESOURCES_DIR/menubar_active.png"
@@ -139,7 +149,7 @@ ln -sf "$DIR/$ZIP_NAME" "$DIR/Roblox Watcher.zip"
 
 echo "=========================================="
 echo " Build Success!"
-echo " - Version:    $VERSION (Universal: arm64 + x86_64)"
+echo " - Version:    $DISPLAY_VERSION (Universal: arm64 + x86_64)"
 echo " - CLI Tool:   $DIR/$CLI_NAME (linked as roblox-watcher)"
 echo " - macOS App:  $DIR/$APP_NAME"
 echo " - ZIP Archive: $DIR/$ZIP_NAME"

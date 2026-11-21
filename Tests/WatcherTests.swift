@@ -269,6 +269,12 @@ func testUpdateServiceSemverComparison() {
     assertFalse(UpdateService.isNewerVersion(remote: "1.0.9", current: "1.1.0"))
     assertFalse(UpdateService.isNewerVersion(remote: "0.9.0", current: "1.0.0"))
     assertFalse(UpdateService.isNewerVersion(remote: "invalid", current: "1.0.0"))
+    
+    // Build metadata (+build) comparison tests (including human-readable formatted timestamps)
+    assertFalse(UpdateService.isNewerVersion(remote: "1.3.0", current: "1.3.0+2026-11-21 16:17:09"))
+    assertTrue(UpdateService.isNewerVersion(remote: "1.3.1", current: "1.3.0+2026-11-21 16:17:09"))
+    assertFalse(UpdateService.isNewerVersion(remote: "1.2.9", current: "1.3.0+2026-11-21 16:17:09"))
+    assertFalse(UpdateService.isNewerVersion(remote: "1.3.0+2026-11-21 18:00:00", current: "1.3.0+2026-11-21 16:17:09"))
 }
 
 func testLogPersistence() {

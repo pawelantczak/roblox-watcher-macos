@@ -17,8 +17,11 @@ public class UpdateService {
         let cleanRemote = remote.trimmingCharacters(in: CharacterSet(charactersIn: "vV \t\r\n"))
         let cleanCurrent = current.trimmingCharacters(in: CharacterSet(charactersIn: "vV \t\r\n"))
         
-        let remoteParts = cleanRemote.split(separator: ".").compactMap { Int($0) }
-        let currentParts = cleanCurrent.split(separator: ".").compactMap { Int($0) }
+        let baseRemote = (cleanRemote.components(separatedBy: "+").first ?? cleanRemote).trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseCurrent = (cleanCurrent.components(separatedBy: "+").first ?? cleanCurrent).trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let remoteParts = baseRemote.split(separator: ".").compactMap { Int($0) }
+        let currentParts = baseCurrent.split(separator: ".").compactMap { Int($0) }
         
         guard !remoteParts.isEmpty && !currentParts.isEmpty else { return false }
         

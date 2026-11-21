@@ -7,8 +7,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
 ## Architecture & Project Structure
 
 - **Single Source of Truth for Versioning**:
-  - `VERSION`: Root plain-text file holding the semver string (e.g. `1.1.0`).
-  - Stamped into `Resources/Info.plist`, CLI banner, GUI app footer badge, and build output filenames.
+  - `VERSION`: Root plain-text file holding the semver string (e.g. `1.3.0`).
+  - Stamped into `Resources/Info.plist`, CLI banner, and build output filenames.
+  - Local builds append a timestamp-based build number (`VERSION+YYYY-MM-DD HH:mm:ss`) in the GUI app footer badge; pipeline builds (GitHub Actions) use only the clean semver `VERSION`.
 - **Components**:
   - `Sources/Core/`: Shared business logic, models, services, and utilities:
     - `Models.swift`: `Config`, `Stats`, `DetectedText`, and `RobloxWindowInfo`.

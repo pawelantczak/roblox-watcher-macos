@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Timestamp Build Number for Local Builds**: Local builds now display a human-readable formatted timestamp build number in the application footer (e.g. `v1.3.0+2026-11-21 16:17:09`), while official GitHub pipeline releases continue to show only the release version.
 - **Test Click Screenshot Logging**: Clicking "Test Click" now automatically logs the recognized event icon picture to your session activity log alongside the click action.
 
 ### Fixed

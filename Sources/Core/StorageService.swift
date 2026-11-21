@@ -117,6 +117,13 @@ public struct StorageService {
            let version = try? String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) {
             return version
         }
+        if let infoDict = Bundle.main.infoDictionary,
+           let shortVer = infoDict["CFBundleShortVersionString"] as? String {
+            if let build = infoDict["CFBundleVersion"] as? String, !build.isEmpty, build != shortVer {
+                return "\(shortVer)+\(build)"
+            }
+            return shortVer
+        }
         if let version = try? String(contentsOfFile: "VERSION", encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) {
             return version
         }
