@@ -73,15 +73,16 @@ public struct GameService {
                 }
                 
                 if let target = target {
+                    let refined = IconTracerService.refineTarget(target, in: screenImage)
                     let liveWin = WindowService.findRobloxWindow()
                     let currentBounds = liveWin?.bounds ?? winBounds
-                    let targetX = currentBounds.origin.x + Double(target.clickPoint.x) * currentBounds.width
-                    let targetY = currentBounds.origin.y + (1.0 - Double(target.clickPoint.y)) * currentBounds.height
+                    let targetX = currentBounds.origin.x + Double(refined.clickPoint.x) * currentBounds.width
+                    let targetY = currentBounds.origin.y + (1.0 - Double(refined.clickPoint.y)) * currentBounds.height
                     let targetPoint = CGPoint(x: targetX, y: targetY)
                     
-                    let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox)
+                    let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: refined.wholeIconBox ?? refined.boundingBox)
                     
-                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(target.text)\" on Roblox window! Dispatching clicks to icon center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                    logger?("\(WindowService.logTimestamp()) [Event Nav] Detected \"\(refined.text)\" on Roblox window! Dispatching clicks to icon center at (\(Int(targetX)), \(Int(targetY))) (icon logged to file)...", cropBase64)
                     InputService.clickScreenAtPoint(point: targetPoint, label: "Event Target Text") { msg in
                         logger?(msg, nil)
                     }
@@ -140,18 +141,19 @@ public struct GameService {
             }
             
             if let target = target {
-                let localX = Double(target.clickPoint.x) * winBounds.width
-                let localY = (1.0 - Double(target.clickPoint.y)) * winBounds.height
+                let refined = IconTracerService.refineTarget(target, in: screenImage)
+                let localX = Double(refined.clickPoint.x) * winBounds.width
+                let localY = (1.0 - Double(refined.clickPoint.y)) * winBounds.height
                 
                 let currentWin = WindowService.findRobloxWindow() ?? liveWin
                 let targetX = currentWin.bounds.origin.x + localX
                 let targetY = currentWin.bounds.origin.y + localY
                 let pt = CGPoint(x: targetX, y: targetY)
-                let norm = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
-                let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox)
+                let norm = CGPoint(x: refined.clickPoint.x, y: 1.0 - refined.clickPoint.y)
+                let cropBase64 = VisionService.cropBase64(from: screenImage, boundingBox: refined.wholeIconBox ?? refined.boundingBox)
                 
-                onFound?(norm, target.text)
-                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(target.text)\" on UI! Clicking icon center at (\(Int(targetX)), \(Int(targetY)))...", cropBase64)
+                onFound?(norm, refined.text)
+                logger?("\(WindowService.logTimestamp()) [Action] Found \"\(refined.text)\" on UI! Clicking icon center at (\(Int(targetX)), \(Int(targetY))) (icon logged to file)...", cropBase64)
                 InputService.clickScreenAtPoint(point: pt, label: "Detected Event Text") { msg in
                     logger?(msg, nil)
                 }

@@ -14,7 +14,7 @@ Available as both a **Native macOS App with Menu Bar controls** and a lightweigh
 
 - **Apple Vision OCR**: 100% local, on-device text recognition. Scans only the Roblox window in under 500ms without cloud APIs or external dependencies.
 - **Auto-Reconnect & Fallback**: Detects error dialogs (`"Disconnected"`, Error 277, etc.), locates the on-screen "Reconnect" button, and clicks it automatically. If kicked, relaunches via Place ID or VIP link.
-- **Event Auto-Navigation**: Waits for game reload, identifies event icons on the left UI panel (e.g. Pumpkin Tycoon), and dispatches teleport clicks.
+- **Universal Event Auto-Navigation**: Automatically navigates back to active in-game events after reconnecting. Enter whatever event keyword is active (e.g. `turkey hunt` or `pumpkin tycoon`) — the watcher dynamically locates the label on the left sidebar, traces the icon graphic's exact cartoon outline (`UIStroke`), and clicks its visual center. Adapts to any game event without requiring app updates.
 - **macOS Menu Bar Integration**: Lives in the top menu bar with live status indicators:
   - **White**: Inactive / idle.
   - **Cyan Blue**: Actively monitoring and watching.
@@ -69,7 +69,17 @@ Designed for background automation, remote rigs, or terminal workflows:
 4. **Action Dispatch**:
    - Matches disconnect phrases (`"Disconnected"`, `"Server was shut down"`, `"Error Code"`).
    - Simulates window activation and mouse clicks using `CGEventCreateMouseEvent`.
-   - Re-teleports to event hubs using configured keywords (`"pumpkin"`, `"tycoon"`).
+   - Re-teleports to event hubs using your configured event keywords (e.g. `"turkey hunt"`, `"pumpkin tycoon"`). Dynamically traces the icon graphic's cartoon border to click its visual center.
+
+---
+
+## Configuring Event Navigation
+
+Roblox Watcher adapts dynamically to any game event without needing an app update:
+- **Whole-Phrase Matching (Recommended)**: Enter the event name without commas (e.g. `turkey hunt`). The watcher requires all words to match, preventing false-positive clicks on world announcement banners (like *"The Turkey"*).
+- **Multiple Keywords**: If an event has distinct alternative names, separate them with commas (e.g. `turkey, hunt`).
+- **Automatic Shape & Border Tracing**: Works with both single-line labels (e.g. *Turkey Hunt*) and stacked two-line labels (e.g. *Pumpkin* / *Tycoon*). Real-time computer vision traces the cartoon outline above the text to click the exact visual center across any screen resolution.
+- **Quick Dashboard Editing**: Change target event keywords directly from the dashboard card or Settings modal at any time.
 
 ---
 
@@ -148,8 +158,7 @@ The app automatically generates `config.json` on first run if not present:
     "error code: 277"
   ],
   "eventTargetKeywords": [
-    "pumpkin",
-    "tycoon"
+    "turkey hunt"
   ]
 }
 ```

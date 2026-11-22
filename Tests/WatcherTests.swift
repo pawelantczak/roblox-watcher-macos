@@ -155,7 +155,7 @@ func testEventTargetDetectionBoundingBox() {
     let rightPanelEvent = DetectedText(text: "Tycoon Boost", boundingBox: CGRect(x: 0.75, y: 0.5, width: 0.1, height: 0.08))
     let leftNonEvent = DetectedText(text: "Settings", boundingBox: CGRect(x: 0.05, y: 0.8, width: 0.1, height: 0.05))
     
-    let detectedLeft = WatcherClassifier.findEventTarget(in: [leftPanelEvent, rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)
+    let detectedLeft = WatcherClassifier.findEventTarget(in: [leftPanelEvent, rightPanelEvent, leftNonEvent], keywords: ["pumpkin event"])
     assertTrue(detectedLeft != nil, "Expected to find left panel event icon")
     assertEqual(detectedLeft?.text, "Pumpkin Event")
     assertEqual(detectedLeft?.boundingBox.midX, 0.10)
@@ -170,17 +170,17 @@ func testEventTargetDetectionBoundingBox() {
     // Multi-line detection: target center of icon graphic above first line
     let line1 = DetectedText(text: "Pumpkin", boundingBox: CGRect(x: 0.05, y: 0.52, width: 0.08, height: 0.04)) // maxY: 0.56, h: 0.04
     let line2 = DetectedText(text: "Tycoon", boundingBox: CGRect(x: 0.06, y: 0.46, width: 0.06, height: 0.04))  // minY: 0.46
-    let multiDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: cfg.eventTargetKeywords)
+    let multiDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: ["pumpkin tycoon"])
     assertTrue(multiDetected != nil, "Expected multi-line event target to be detected")
     assertEqual(multiDetected?.text, "Pumpkin Tycoon")
     assertEqual(multiDetected?.clickPoint.x, 0.09) // MidX of first line
     // Icon center: line1.maxY (0.56) + 1.0 * totalHeight (0.10) = 0.66
     assertEqual(Double(round(multiDetected!.clickPoint.y * 100) / 100), 0.66)
     
-    // Single-line Turkey Hunt detection with dynamic icon centering
+    // Single-line Turkey Hunt detection with dynamic icon centering using default config keywords
     let turkeySingle = DetectedText(text: "Turkey Hunt", boundingBox: CGRect(x: 0.06, y: 0.38, width: 0.06, height: 0.02)) // maxY: 0.40, h: 0.02
-    let turkeyDetected = WatcherClassifier.findEventTarget(in: [turkeySingle], keywords: ["turkey", "hunt"])
-    assertTrue(turkeyDetected != nil, "Expected Turkey Hunt to be detected")
+    let turkeyDetected = WatcherClassifier.findEventTarget(in: [turkeySingle], keywords: cfg.eventTargetKeywords)
+    assertTrue(turkeyDetected != nil, "Expected Turkey Hunt to be detected using default config keywords")
     assertEqual(turkeyDetected?.clickPoint.x, 0.09)
     // Icon center: maxY (0.40) + 1.25 * h (0.02) = 0.425
     assertEqual(Double(round(turkeyDetected!.clickPoint.y * 1000) / 1000), 0.425)
@@ -214,8 +214,39 @@ func testEventTargetDetectionBoundingBox() {
     assertEqual(Double(round(fuzzyTarget!.clickPoint.x * 100) / 100), 0.04)
     
     // If only right-side target exists, it should be ignored
-    let detectedRight = WatcherClassifier.findEventTarget(in: [rightPanelEvent, leftNonEvent], keywords: cfg.eventTargetKeywords)
+    let detectedRight = WatcherClassifier.findEventTarget(in: [rightPanelEvent, leftNonEvent], keywords: ["tycoon boost"])
     assertTrue(detectedRight == nil, "Right-side target should be ignored (not in event panel)")
+    
+    // Whole-string vs comma test:
+    // Without comma ("turkey hunt"), isolated word "The Turkey" must be rejected
+    let bannerItem = DetectedText(
+        text: "The Turkey",
+        boundingBox: CGRect(x: 0.05, y: 0.85, width: 0.08, height: 0.03),
+        wordBoxes: [
+            DetectedWord(word: "The", boundingBox: CGRect(x: 0.05, y: 0.85, width: 0.02, height: 0.03)),
+            DetectedWord(word: "Turkey", boundingBox: CGRect(x: 0.075, y: 0.85, width: 0.05, height: 0.03))
+        ]
+    )
+    let rejectedBanner = WatcherClassifier.findEventTarget(in: [bannerItem], keywords: ["turkey hunt"])
+    assertTrue(rejectedBanner == nil, "Isolated 'The Turkey' banner must be rejected when keyword has no comma ('turkey hunt')")
+    
+    // With comma ("turkey, hunt"), "The Turkey" is allowed
+    let acceptedWithComma = WatcherClassifier.findEventTarget(in: [bannerItem], keywords: ["turkey, hunt"])
+    assertTrue(acceptedWithComma != nil, "'The Turkey' banner must be accepted when keywords contain comma ('turkey, hunt')")
+    
+    // Isolated "Hunt" alone must be rejected when keyword is "turkey hunt"
+    let huntAloneItem = DetectedText(
+        text: "Hunt",
+        boundingBox: CGRect(x: 0.05, y: 0.50, width: 0.04, height: 0.03),
+        wordBoxes: [DetectedWord(word: "Hunt", boundingBox: CGRect(x: 0.05, y: 0.50, width: 0.04, height: 0.03))]
+    )
+    let rejectedHuntAlone = WatcherClassifier.findEventTarget(in: [huntAloneItem], keywords: ["turkey hunt"])
+    assertTrue(rejectedHuntAlone == nil, "Isolated 'Hunt' must be rejected when keyword is 'turkey hunt'")
+    
+    // Multi-line button matching whole phrase without comma ("pumpkin tycoon")
+    let multiPhraseDetected = WatcherClassifier.findEventTarget(in: [line1, line2], keywords: ["pumpkin tycoon"])
+    assertTrue(multiPhraseDetected != nil, "Multi-line button must match phrase 'pumpkin tycoon'")
+    assertEqual(multiPhraseDetected?.text, "Pumpkin Tycoon")
 }
 
 func testPlaceIdParsing() {
@@ -399,6 +430,98 @@ func testFuzzyOcrMatching() {
     assertFalse(WatcherClassifier.wordMatches(ocrWord: "Rewards", targetToken: "turkey"), "Rewards must not match turkey")
 }
 
+func testIconTracerService() {
+    print("▶ Running: testIconTracerService")
+    
+    let w = 200
+    let h = 200
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    var pixelData = [UInt8](repeating: 240, count: w * h * 4)
+    
+    // Draw 3px black border around icon at x=80..120, y=50..90
+    for y in 50...90 {
+        for x in 80...120 {
+            let isBorder = (x <= 82 || x >= 118 || y <= 52 || y >= 88)
+            let offset = (y * w + x) * 4
+            if isBorder {
+                pixelData[offset] = 10
+                pixelData[offset + 1] = 10
+                pixelData[offset + 2] = 10
+                pixelData[offset + 3] = 255
+            } else {
+                pixelData[offset] = 255
+                pixelData[offset + 1] = 150
+                pixelData[offset + 2] = 20
+                pixelData[offset + 3] = 255
+            }
+        }
+    }
+    
+    // Draw text box border at x=80..120, y=105..125
+    for y in 105...125 {
+        for x in 80...120 {
+            let isBorder = (x <= 81 || x >= 119 || y <= 106 || y >= 124)
+            let offset = (y * w + x) * 4
+            if isBorder {
+                pixelData[offset] = 15
+                pixelData[offset + 1] = 15
+                pixelData[offset + 2] = 15
+                pixelData[offset + 3] = 255
+            }
+        }
+    }
+    
+    guard let ctx = CGContext(
+        data: &pixelData,
+        width: w,
+        height: h,
+        bitsPerComponent: 8,
+        bytesPerRow: w * 4,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ), let cgImg = ctx.makeImage() else {
+        assertTrue(false, "Failed to create synthetic test image")
+        return
+    }
+    
+    // Text in Vision coordinates (0..1, bottom-left origin)
+    let textVisionBox = CGRect(x: 0.40, y: 0.375, width: 0.20, height: 0.10)
+    
+    let traced = IconTracerService.traceIconBounds(in: cgImg, textBoundingBox: textVisionBox)
+    assertTrue(traced != nil, "Expected IconTracer to find synthetic icon border")
+    
+    if let traced = traced {
+        assertEqual(Double(round(traced.center.x * 100) / 100), 0.50)
+        assertEqual(Double(round(traced.center.y * 100) / 100), 0.65)
+        assertEqual(Double(round(traced.bounds.width * 100) / 100), 0.20)
+        assertEqual(Double(round(traced.bounds.height * 100) / 100), 0.20)
+    }
+    
+    // Fallback test: on a blank white image, refineTarget must preserve the original target
+    var blankPixels = [UInt8](repeating: 255, count: w * h * 4)
+    let blankCtx = CGContext(
+        data: &blankPixels,
+        width: w,
+        height: h,
+        bitsPerComponent: 8,
+        bytesPerRow: w * 4,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )
+    if let blankImg = blankCtx?.makeImage() {
+        let initialTarget = DetectedText(
+            text: "Mock Event",
+            boundingBox: textVisionBox,
+            targetPoint: CGPoint(x: 0.50, y: 0.60),
+            wholeIconBox: CGRect(x: 0.40, y: 0.50, width: 0.20, height: 0.20)
+        )
+        let refined = IconTracerService.refineTarget(initialTarget, in: blankImg)
+        assertEqual(refined.clickPoint.x, 0.50)
+        assertEqual(refined.clickPoint.y, 0.60)
+        assertEqual(refined.text, "Mock Event")
+    }
+}
+
 // MARK: - Main Test Runner Execution
 
 @main
@@ -415,6 +538,7 @@ struct TestRunner {
         testReconnectButtonDetection()
         testEventTargetDetectionBoundingBox()
         testFuzzyOcrMatching()
+        testIconTracerService()
         testPlaceIdParsing()
         testAntiAfkCountdownFormatting()
         testSingleInstanceKernelLock()

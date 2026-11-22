@@ -16,6 +16,7 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
     - `Classifier.swift`: OCR text filtering (`WatcherClassifier`) and `WatcherUtils`.
     - `WindowService.swift`: Window discovery, placeId parsing, and activation.
     - `VisionService.swift`: Screen capture and on-device Apple Vision OCR.
+    - `IconTracerService.swift`: Computer vision cartoon border (`UIStroke`) tracing and exact geometric centroid resolution.
     - `InputService.swift`: Synthetic mouse events, hardware warping, and Anti-AFK engine.
     - `GameService.swift`: Game relaunching and event area navigation workflows.
     - `StorageService.swift`: Deterministic JSON persistence, structured JSONL log persistence with base64 event crop embedding, and version resolution.
@@ -48,9 +49,9 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - Filters out non-fatal notification toasts (such as "You've disconnected from Voice Chat") using configurable `ignorePhrases`.
 2. **Reconnection & Teleport**:
    - Dispatches synthesized mouse events via dual-layer window activation (`NSRunningApplication.activate` by bundle ID `com.roblox.RobloxPlayer` + AppleScript fallback).
-   - Dynamically calculates the exact center of the event button graphic directly above the recognized event label, utilizing sub-word bounding box isolation to separate adjacent buttons (e.g. side-by-side "Turkey Hunt" and "Leagues" on wide screens) and centering event log crops on the full icon.
-   - Utilizes focused 4x super-sampled scanning on the left 20% sidebar and fuzzy token matching with Levenshtein edit distance to tolerate stylized font OCR misreadings (e.g. "Turkcy" or "Hung" for Turkey Hunt), guaranteeing button detection on low-resolution windows.
-   - Scans and verifies target event keywords (`turkey`, `hunt`, `pumpkin`, `tycoon`, etc.) on the left UI panel before clicking; clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
+   - Dynamically traces the exact cartoon outline (`UIStroke`) of the event graphic directly above the recognized event label using real-time CoreGraphics pixel analysis (`IconTracerService`), utilizing column gap isolation to separate adjacent buttons (e.g. side-by-side "Turkey Hunt" and "Leagues" on wide screens) and centering event log crops on the full icon.
+   - Utilizes focused 4x super-sampled scanning on the left 20% sidebar and fuzzy token matching with Levenshtein edit distance to tolerate stylized font OCR misreadings (e.g. "Turkcy" or "Hung"), guaranteeing button detection on low-resolution windows.
+   - Scans and verifies user-configured target event keywords (e.g. `turkey hunt`, `pumpkin tycoon`) on the left UI panel before clicking; evaluates keywords without commas as unified phrases across single-line or vertically clustered multi-line buttons to eliminate banner false-positives (e.g. "The Turkey"), clears cached event coordinates when absent inside the event, and never falls back to unverified coordinates or arbitrary hardcoded pixels.
 3. **Seamless Anti-AFK Keep-Alive**:
    - Delivers a focus click followed by a native Spacebar key event (`kVK_Space`, character jump) with randomized spatial jitter (`±8px`) to the Roblox window every 10 minutes (configurable 1m–19m via live dashboard input) using a Focus-Click-Space-Restore sequence.
    - Momentarily focuses Roblox so `UserInputService` accepts the jump input to reset the 20-minute idle kick timer without accidental clicks on viewport UI elements or pets, then instantly restores previous application focus and returns the hardware cursor to its original position.
@@ -92,8 +93,10 @@ Roblox Watcher is a native macOS automation and monitoring suite designed to mai
    - **End-User Friendly Only**: Write changelog entries strictly from the end-user's perspective focusing on functional aspects, observable behavior, and user benefits. Never include low-level technical jargon, internal code identifiers, framework names, internal file names, or implementation details.
 3. **ALWAYS UPDATE GEMINI.md**:
    - Any architectural change, new script, configuration field, or rule modification must be recorded in this file ([GEMINI.md](file:///Users/krr/Sources/roblox-watcher/GEMINI.md)).
-4. **VERSION BUMPING DETERMINED BY CHANGELOG**:
-   - Always determine semver increments strictly from the release entries in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md):
+4. **NO AUTOMATIC VERSION BUMPING**:
+   - **NEVER** bump the version automatically.
+   - Always keep new additions and fixes under `## [Unreleased]` in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md) and wait for explicit instruction from the user before bumping `VERSION` or running `./bump.sh`.
+   - When the user explicitly requests a version bump, determine the semver increment strictly from the release entries in [CHANGELOG.md](file:///Users/krr/Sources/roblox-watcher/CHANGELOG.md):
      - If there are **only fixes** (`### Fixed`), bump **patch** (`x.y.Z`).
      - If there are any **new features or capabilities** (`### Added`), bump **minor** (`x.Y.0`).
      - If there are **breaking architectural changes**, bump **major** (`X.0.0`).

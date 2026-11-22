@@ -9,17 +9,15 @@ public struct WatcherClassifier {
     public static func isIgnored(text: String, ignorePhrases: [String]) -> Bool {
         let lower = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !lower.isEmpty else { return false }
-        return ignorePhrases.contains { phrase in
-            let p = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            return !p.isEmpty && lower.contains(p)
+        return ignorePhrases.contains { p in
+            let cl = p.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return !cl.isEmpty && lower.contains(cl)
         }
     }
     
     /// Returns true if the text indicates a fatal disconnect requiring action.
     public static func isFatalDisconnect(text: String, disconnectKeywords: [String], ignorePhrases: [String]) -> Bool {
-        if isIgnored(text: text, ignorePhrases: ignorePhrases) {
-            return false
-        }
+        if isIgnored(text: text, ignorePhrases: ignorePhrases) { return false }
         let lower = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !lower.isEmpty else { return false }
         return disconnectKeywords.contains { kw in
@@ -90,54 +88,89 @@ public struct WatcherClassifier {
         }
     }
     
+    private struct KeywordTarget {
+        let tokens: [String]
+        let requiresAll: Bool
+    }
+    
+    private static func parseKeywordTargets(_ keywords: [String]) -> [KeywordTarget] {
+        keywords.flatMap { kw -> [KeywordTarget] in
+            let trimmed = kw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !trimmed.isEmpty else { return [] }
+            let hasComma = trimmed.contains(",")
+            let parts = hasComma ? trimmed.components(separatedBy: ",") : [trimmed]
+            return parts.compactMap { p in
+                let tok = p.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+                return tok.isEmpty ? nil : KeywordTarget(tokens: tok, requiresAll: !hasComma && tok.count > 1)
+            }
+        }
+    }
+    
     /// Identifies event icons on the left UI panel (origin.x < maxNormalizedX).
-    /// Dispatches clicks directly to the center of the icon graphic above the text.
+    /// If keywords contain no commas, the string is treated as a single unified phrase requiring all tokens.
     public static func findEventTarget(
         in items: [DetectedText],
         keywords: [String],
         maxNormalizedX: CGFloat = 0.35
     ) -> DetectedText? {
-        let cleanedKeywords = keywords.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.filter { !$0.isEmpty }
-        guard !cleanedKeywords.isEmpty else { return nil }
+        let targets = parseKeywordTargets(keywords)
+        guard !targets.isEmpty else { return nil }
         
-        let tokenKeywords = cleanedKeywords.flatMap {
-            $0.components(separatedBy: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;:")))
-        }.filter { !$0.isEmpty }
+        let candidateItems = items.filter { $0.boundingBox.origin.x < maxNormalizedX }
+        guard !candidateItems.isEmpty else { return nil }
+        
+        // Group candidate lines into vertically stacked button clusters
+        var clusters: [[DetectedText]] = []
+        var used = Set<Int>()
+        let sortedCandidates = candidateItems.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
+        for i in 0..<sortedCandidates.count where !used.contains(i) {
+            var cluster = [sortedCandidates[i]]
+            used.insert(i)
+            for j in (i + 1)..<sortedCandidates.count where !used.contains(j) {
+                let top = cluster.last!
+                let bottom = sortedCandidates[j]
+                let alignedX = abs(top.boundingBox.midX - bottom.boundingBox.midX) < 0.05
+                let verticalGap = top.boundingBox.minY - bottom.boundingBox.maxY
+                if alignedX && verticalGap >= -0.02 && verticalGap < 0.05 {
+                    cluster.append(bottom)
+                    used.insert(j)
+                    break
+                }
+            }
+            clusters.append(cluster)
+        }
         
         var matches: [DetectedText] = []
-        for item in items {
-            guard item.boundingBox.origin.x < maxNormalizedX else { continue }
-            let lower = item.text.lowercased()
-            let wordsToCheck: [String] = !item.wordBoxes.isEmpty
-                ? item.wordBoxes.map { $0.word }
-                : item.text.components(separatedBy: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;:\"'!?()[]{}"))).filter { !$0.isEmpty }
-            
-            let matchesPhrase = cleanedKeywords.contains { lower.contains($0) }
-            let hasMatchingWord = wordsToCheck.contains { w in
-                tokenKeywords.contains { kw in wordMatches(ocrWord: w, targetToken: kw) }
-            }
-            guard matchesPhrase || hasMatchingWord else { continue }
-            
-            // Substring bounding box isolation:
-            // If item has wordBoxes, isolate the matched words so adjacent button labels (e.g. 'Leagues')
-            // do not skew the horizontal center.
-            if !item.wordBoxes.isEmpty {
-                let matchingWords = item.wordBoxes.filter { wb in
-                    let wl = wb.word.lowercased()
-                    return cleanedKeywords.contains { wl.contains($0) } || tokenKeywords.contains { kw in wordMatches(ocrWord: wb.word, targetToken: kw) }
+        for target in targets {
+            for cluster in clusters {
+                let clusterWords = cluster.flatMap { item in
+                    !item.wordBoxes.isEmpty ? item.wordBoxes.map { $0.word } :
+                        item.text.components(separatedBy: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;:\"'!?()[]{}"))).filter { !$0.isEmpty }
                 }
-                if !matchingWords.isEmpty {
-                    let minX = matchingWords.map { $0.boundingBox.minX }.min() ?? item.boundingBox.minX
-                    let maxX = matchingWords.map { $0.boundingBox.maxX }.max() ?? item.boundingBox.maxX
-                    let minY = matchingWords.map { $0.boundingBox.minY }.min() ?? item.boundingBox.minY
-                    let maxY = matchingWords.map { $0.boundingBox.maxY }.max() ?? item.boundingBox.maxY
-                    let isolatedBox = CGRect(x: minX, y: minY, width: max(0.001, maxX - minX), height: max(0.001, maxY - minY))
-                    let isolatedText = matchingWords.map { $0.word }.joined(separator: " ")
-                    matches.append(DetectedText(text: isolatedText, boundingBox: isolatedBox, wordBoxes: matchingWords))
-                    continue
+                let matchedTokens = target.tokens.filter { tok in
+                    clusterWords.contains { w in wordMatches(ocrWord: w, targetToken: tok) }
                 }
+                guard target.requiresAll ? (matchedTokens.count == target.tokens.count) : (!matchedTokens.isEmpty) else { continue }
+                
+                if cluster.count == 1 && !cluster[0].wordBoxes.isEmpty {
+                    let matchingWords = cluster[0].wordBoxes.filter { wb in
+                        target.tokens.contains { tok in wordMatches(ocrWord: wb.word, targetToken: tok) }
+                    }
+                    if !matchingWords.isEmpty {
+                        let minX = matchingWords.map { $0.boundingBox.minX }.min() ?? cluster[0].boundingBox.minX
+                        let maxX = matchingWords.map { $0.boundingBox.maxX }.max() ?? cluster[0].boundingBox.maxX
+                        let minY = matchingWords.map { $0.boundingBox.minY }.min() ?? cluster[0].boundingBox.minY
+                        let maxY = matchingWords.map { $0.boundingBox.maxY }.max() ?? cluster[0].boundingBox.maxY
+                        let isolatedBox = CGRect(x: minX, y: minY, width: max(0.001, maxX - minX), height: max(0.001, maxY - minY))
+                        let isolatedText = matchingWords.map { $0.word }.joined(separator: " ")
+                        matches = [DetectedText(text: isolatedText, boundingBox: isolatedBox, wordBoxes: matchingWords)]
+                        break
+                    }
+                }
+                matches = cluster
+                break
             }
-            matches.append(item)
+            if !matches.isEmpty { break }
         }
         
         guard !matches.isEmpty else { return nil }

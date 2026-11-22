@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Turkey Hunt & Dynamic Icon Centering**: Added automatic detection for the Turkey Hunt event. Clicks now land directly in the center of the event graphic across all window sizes, and activity log thumbnails are framed cleanly around the whole icon.
-- **Resilient Font & OCR Tolerance**: Added fuzzy matching to automatically recognize stylized in-game fonts despite common reading errors (such as "Turkcy" or "Hung" for Turkey Hunt), ensuring event buttons are reliably detected even on blurry or low-resolution screens.
-- **Smart Button Separation on Wide Screens**: Correctly separates event buttons from adjacent menu buttons (like Leagues) when game icons sit side-by-side on wide or full-screen displays.
-- **Timestamp Build Number for Local Builds**: Local builds now display a human-readable formatted timestamp build number in the application footer (e.g. `v1.3.0+2026-11-21 16:17:09`), while official GitHub pipeline releases continue to show only the release version.
+- **Universal Event Centering & Outline Tracing**: Clicks now automatically resolve the visual center of any event icon graphic by tracing the game's cartoon outline in real time (working seamlessly for both single-line labels like "Turkey Hunt" and stacked two-line labels like "Pumpkin Tycoon") across all window sizes, framing activity log thumbnails cleanly around the entire icon.
+- **Whole-Phrase Event Keyword Matching**: Keywords entered without commas (such as example "turkey hunt") are now evaluated as a single complete phrase, ensuring world announcements and banner messages containing partial words (like "The Turkey") are ignored, while multi-line event buttons continue to be matched seamlessly.
+- **Resilient Font & OCR Tolerance**: Added fuzzy matching to automatically recognize stylized in-game fonts despite common reading errors (such as "Turkcy" or "Hung" for Turkey Hunt), ensuring any event button is reliably detected even on blurry or low-resolution screens.
+- **Smart Button Separation on Wide Screens**: Correctly separates event buttons from adjacent menu buttons (such as Leagues) when game icons sit side-by-side on wide or full-screen displays.
+- **Event Icon Image Logging**: Automatically saves the picture of every recognized event icon into your session activity log file whenever detected, noting in the activity stream that the icon image was logged.
 - **Test Click Screenshot Logging**: Clicking "Test Click" now automatically logs the recognized event icon picture to your session activity log alongside the click action.
+- **Timestamp Build Number for Local Builds**: Local builds now display a human-readable formatted timestamp build number in the application footer (e.g. `v1.3.0+2026-11-21 16:17:09`), while official GitHub pipeline releases continue to show only the release version.
 
 ### Fixed
 - **Clean Activity Logs**: Prevented automated test runs from injecting placeholder records into your live activity log files.

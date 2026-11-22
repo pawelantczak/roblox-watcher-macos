@@ -134,10 +134,12 @@ public class WatcherManager {
                                 target = WatcherClassifier.findEventTarget(in: sidebarItems, keywords: config.eventTargetKeywords)
                             }
                             if let target = target {
-                                if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: target.wholeIconBox ?? target.boundingBox) {
+                                let refinedTarget = IconTracerService.refineTarget(target, in: screenImage)
+                                if let base64 = VisionService.cropBase64(from: screenImage, boundingBox: refinedTarget.wholeIconBox ?? refinedTarget.boundingBox) {
                                     self.latestEventCropBase64 = base64
-                                    self.latestEventNormalizedCoords = CGPoint(x: target.clickPoint.x, y: 1.0 - target.clickPoint.y)
-                                    self.latestEventMatchedText = target.text
+                                    self.latestEventNormalizedCoords = CGPoint(x: refinedTarget.clickPoint.x, y: 1.0 - refinedTarget.clickPoint.y)
+                                    self.latestEventMatchedText = refinedTarget.text
+                                    appendLog("\(logTime()) [Event Icon] Recognized \"\(refinedTarget.text)\" on UI (icon logged to file)", eventCropBase64: base64)
                                 }
                             } else {
                                 (self.latestEventCropBase64, self.latestEventNormalizedCoords, self.latestEventMatchedText) = (nil, nil, nil)

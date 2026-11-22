@@ -30,10 +30,7 @@ public struct Config: Codable, Equatable {
         "connection closed"
     ]
     public var eventTargetKeywords: [String] = [
-        "turkey",
-        "hunt",
-        "pumpkin",
-        "tycoon"
+        "turkey hunt"
     ]
     public var ignorePhrases: [String] = [
         "voice chat",
@@ -71,7 +68,7 @@ public struct Config: Codable, Equatable {
             "server was shut down", "server has closed", "please reconnect",
             "connection lost", "connection closed"
         ]
-        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["turkey", "hunt", "pumpkin", "tycoon"]
+        eventTargetKeywords = try container.decodeIfPresent([String].self, forKey: .eventTargetKeywords) ?? ["turkey hunt"]
         ignorePhrases = try container.decodeIfPresent([String].self, forKey: .ignorePhrases) ?? ["voice chat", "voice"]
         webServerEnabled = try container.decodeIfPresent(Bool.self, forKey: .webServerEnabled) ?? false
         webServerPort = try container.decodeIfPresent(Int.self, forKey: .webServerPort) ?? 8765
