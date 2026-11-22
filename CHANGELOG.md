@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.4.0] - 2026-11-22
+
 ### Added
 - **Universal Event Centering & Outline Tracing**: Clicks now automatically resolve the visual center of any event icon graphic by tracing the game's cartoon outline in real time (working seamlessly for both single-line labels like "Turkey Hunt" and stacked two-line labels like "Pumpkin Tycoon") across all window sizes, framing activity log thumbnails cleanly around the entire icon.
 - **Whole-Phrase Event Keyword Matching**: Keywords entered without commas (such as example "turkey hunt") are now evaluated as a single complete phrase, ensuring world announcements and banner messages containing partial words (like "The Turkey") are ignored, while multi-line event buttons continue to be matched seamlessly.
